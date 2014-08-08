@@ -3,22 +3,19 @@ use File::Basename;
 use warnings;
 use strict;
 
-my ($CDSSearchFraction, $Genome, $StartNeighbourhood, $SelectNumberOfProtospacers, $Species, $RefSeqFile, %ScriptOptions, %Protospacers, %ProtospacerSequences, $OutputFile, %GenesToProcess);
+my ($CDSSearchFraction, $Genome, $StartNeighbourhood, $SelectNumberOfProtospacers, $Species, $RefSeqFile, %ScriptOptions, %Protospacers, %SelectedProtospacers, %ProtospacerSequences, $OutputFile, %GenesToProcess);
 my $QualityFileLocation="/media/Data/QualityFiles/";
 
 #Get options passed to script
-print "Usage:$0 -iocenrs\n-i Input file containing Genes and RefSeq IDs\n-o Outputfile. If none given, input filename is used appended with .out\n-c Determines the fraction of each RefSeq ID to be investigated. Default 1\n-e Determines the amount of nucleotides around the startcodon to include in the search. Default 0, max 150\n-n Number of targets to be found. Default 20\n-s Species (human/mouse). Default human\n";
+print "Usage:$0 -iocenrs\n-i Input file containing Genes and RefSeq IDs\n-o Outputfile. If none given, input filename is used appended with .selectedprotospacers\n-c Determines the fraction of each RefSeq ID to be investigated. Default 1\n-e Determines the amount of nucleotides around the startcodon to include in the search. Default 0, max 150\n-n Number of targets to be found. Default 20\n-s Species (human/mouse). Default human\n";
 getopt( 'iocens', \%ScriptOptions );
 die "ERROR in $0: No Inputfile given.\n" unless my $InputFile = $ScriptOptions{'i'};
-$OutputFile = $InputFile . ".out" unless $OutputFile = $ScriptOptions{'o'};
+$OutputFile = $InputFile . ".selectedprotospacers" unless $OutputFile = $ScriptOptions{'o'};
 $CDSSearchFraction = 1 unless $CDSSearchFraction = $ScriptOptions{'c'};
 $StartNeighbourhood = 0 unless $StartNeighbourhood = $ScriptOptions{'e'};
 die "ERROR in $0: Start neighbourhood can maximally be 150.\n" if ($StartNeighbourhood > 150); 
 $SelectNumberOfProtospacers = 20 unless $SelectNumberOfProtospacers = $ScriptOptions{'n'};
 $Species = 'human' unless $Species = $ScriptOptions{'s'};
-
-#Open output file
-open (OUT, ">", $OutputFile . ".seq") or die "ERROR in $0: Cannot open outputfile $OutputFile\n";
 
 #Assign proper genome id
 $Species = lc($Species);
@@ -179,22 +176,35 @@ foreach my $QueryGene (keys %GenesToProcess) {
 	
 			#Only write target site to output file if the cut site is either within the chosen start codon neighbourhood or within the chosen CDS fraction in which it has to be in a codingregion too  
 			if ($WithinStartCodonNeighbourHood || ($WithinChosenCDSFraction && $CutWithinCodingSequence)) {
-				$ProtospacerSequences{"$QueryGene\t$QueryRefSeq\t$Chromosome\t$Orientation\t$CutLocation\t$Score\t$ProtospacerSequence\t$NumberOfIdentical3PrimeTargets\t$NumberOfIdentical3PrimeTargetsNearExons\t$Degree\t$ClosestRelatives\t$ClosestRelativesNearExons\t$Label"} = $Score;
+				my %HashOfProtospacers;
+				$HashOfProtospacers{$ProtospacerSequence}->[0]=$Chromosome;
+				$HashOfProtospacers{$ProtospacerSequence}->[1]=$Orientation;
+				$HashOfProtospacers{$ProtospacerSequence}->[2]=$CutLocation;
+				$HashOfProtospacers{$ProtospacerSequence}->[3]=$ProtospacerSequence;
+				$HashOfProtospacers{$ProtospacerSequence}->[4]=$NumberOfIdentical3PrimeTargets;
+				$HashOfProtospacers{$ProtospacerSequence}->[5]=$NumberOfIdentical3PrimeTargetsNearExons;
+				$HashOfProtospacers{$ProtospacerSequence}->[6]=$Degree;
+				$HashOfProtospacers{$ProtospacerSequence}->[7]=$ClosestRelatives;
+				$HashOfProtospacers{$ProtospacerSequence}->[8]=$ClosestRelativesNearExons;
+				$HashOfProtospacers{$ProtospacerSequence}->[9]=$Score;
+				$SelectedProtospacers{$QueryGene}->{$QueryRefSeq}=%HashOfProtospacers;
 			}
 		}
 		close (IN) or die "ERROR in $0: Cannot close inputfile $InputFile\n";
-		
-		my $MaxNumberOfProtospacers = keys %ProtospacerSequences;
-		if ($SelectNumberOfProtospacers>0) {
-			$MaxNumberOfProtospacers=$SelectNumberOfProtospacers;
-		}
+	}
+}
 
-		print "$MaxNumberOfProtospacers Protospacers found for RefSeq $QueryRefSeq for gene $QueryGene\n";
+#Open output file
+open (OUT, ">", $OutputFile . ".seq") or die "ERROR in $0: Cannot open outputfile $OutputFile\n";
+
+#Loop over all selected protospacers to perform selection and output
+foreach my $QueryGene (sort {$a <=> $b} keys %SelectedProtospacers) {
+	foreach my $QueryRefSeq ($SelectedProtospacers{$QueryGene}) {
 		my $NumberOfProtospacers = 0;
-		foreach my $ProtospacerSequence (sort {$ProtospacerSequences{$b} <=> $ProtospacerSequences{$a}} keys %ProtospacerSequences) {
+		foreach my $ProtospacerSequence (sort {$SelectedProtospacers{$QueryGene}->{$QueryRefSeq}->[10]) {
 			print OUT $ProtospacerSequence . "\t" . $NumberOfProtospacers . "\n";
 			$NumberOfProtospacers++;
-			last if ($NumberOfProtospacers >= $MaxNumberOfProtospacers);
+			last if ($NumberOfProtospacers >= $SelectNumberOfProtospacers);
 		}
 	}
 }
