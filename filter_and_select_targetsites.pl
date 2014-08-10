@@ -2,6 +2,7 @@ use Getopt::Std;
 use File::Basename;
 use warnings;
 use strict;
+use apple;
 
 my ($CDSSearchFraction, $Genome, $StartNeighbourhood, $SelectNumberOfProtospacers, $Species, $RefSeqFile, %ScriptOptions, %Protospacers, %SelectedProtospacers, %ProtospacerSequences, $OutputFile, %GenesToProcess);
 my $QualityFileLocation="/media/Data/QualityFiles/";
