@@ -1,0 +1,82 @@
+	<style>
+		.caption{font-size: 14px; font-family: Arial}
+		.tooltip{font-size: 12px; font-family: Arial}
+		.tooltip_bg{fill: white; stroke: black; stroke-width: 1; opacity: 0.85;}	
+	</style>
+
+	<script type="text/ecmascript">
+		<![CDATA[
+			function init(evt) {
+				if ( window.svgDocument == null ) {
+					svgDocument = evt.target.ownerDocument;
+				}
+				tooltip = svgDocument.getElementById('tooltip');
+				tooltip_bg = svgDocument.getElementById('tooltip_bg');
+			}
+
+			function ShowTooltip(evt, mouseovertext) {
+				var svg = document.querySelector('svg');
+				var ScreenTransformationMatrix = svg.getScreenCTM();
+				tooltip.firstChild.data = mouseovertext;
+				length = tooltip.getComputedTextLength()+5;
+				if((evt.offsetX/ScreenTransformationMatrix.a)>750) {
+					tooltip.setAttributeNS(null,"x",(evt.offsetX/ScreenTransformationMatrix.a)-40-length);
+				}
+				else {
+					tooltip.setAttributeNS(null,"x",(evt.offsetX/ScreenTransformationMatrix.a)+20);
+				}
+				tooltip.setAttributeNS(null,"y",(evt.offsetY/ScreenTransformationMatrix.d)+21);
+				tooltip.setAttributeNS(null,"visibility","visible");
+				tooltip_bg.setAttributeNS(null,"width",length);
+				if((evt.offsetX/ScreenTransformationMatrix.a)>750) {
+					tooltip_bg.setAttributeNS(null,"x",(evt.clientX/ScreenTransformationMatrix.a)-42-length);
+				}
+				else {
+					tooltip_bg.setAttributeNS(null,"x",(evt.clientX/ScreenTransformationMatrix.a)+18);
+				}
+				tooltip_bg.setAttributeNS(null,"y",(evt.clientY/ScreenTransformationMatrix.d)+8);
+				tooltip_bg.setAttributeNS(null,"visibility","visible");
+			}
+
+			function HideTooltip(evt) {
+				tooltip.setAttributeNS(null,"visibility","hidden");
+				tooltip_bg.setAttributeNS(null,"visibility","hidden");
+			}
+			
+			function ClickTriangle(TriangleID) {     		
+      		var path=svgDocument.getElementById(TriangleID);
+      		var CurrentTriangleColor=path.style.getPropertyValue("stroke");   			
+				if(CurrentTriangleColor=='#000000') {
+					path.style.setProperty("stroke","red", "");
+   				path.style.setProperty("stroke-width","2", "");
+				}				
+				else {
+					path.style.setProperty("stroke","black", "");
+   				path.style.setProperty("stroke-width","1", "");
+				}
+			}
+		   function AddEventListeners(CallbackFunction)
+		   {	
+		   	AllTriangles = svgDocument.getElementsByClassName('Triangle');					   	
+		   	for (var i = 0; i < AllTriangles.length; i++) {
+					AllTriangles[i].addEventListener("click", function () {CallbackFunction(this.id)}, false); 
+				}	
+		   }
+		]]>
+	</script>
+	<defs>
+		<linearGradient id = "grad1" x1 = "0%" y1 = "0%" x2 = "0%" y2 = "100%">
+			<stop stop-color = "rgb(200,200,255)" offset = "0%"/>
+			<stop stop-color = "rgb(255,255,255)" offset = "50%"/>
+			<stop stop-color = "rgb(200,200,255)" offset = "100%"/>
+		</linearGradient>
+		<linearGradient id = "blueyellow" x1 = "0%" y1 = "0%" x2 = "100%" y2 = "0%">
+			<stop stop-color = "rgb(0,0,255)" offset = "0%"/>
+			<stop stop-color = "rgb(255,255,255)" offset = "50%"/>
+			<stop stop-color = "rgb(255,255,0)" offset = "100%"/>
+		</linearGradient>
+	</defs>
+ 	<text x="1425" y="20" font-family="Arial" font-size="12">High score</text>
+	<rect x="1360" y="9" width="60" height="15" stroke="black" fill="url(#blueyellow)"></rect>
+	<text x="1300" y="20" font-family="Arial" font-size="12">Low score</text>
+	

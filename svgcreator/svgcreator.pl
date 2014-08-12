@@ -1,18 +1,14 @@
-use Time::HiRes qw/gettimeofday/;
 use Getopt::Std;
 use warnings;
 use strict;
+use File::Basename;
 
 #This script creates an svg graphical representation of the coding sequence of a gene with CRISPR location mapped onto it
 #As input arguments, it takes the refseq id (r) and the species (s) for which to find the info
-#As output, it prints the name of the svg file created.
-#An html file containing a table to all the CRISPR sites in the svg file is also created
 #The whole image is created such that it is 1500 pixels wide. This can best be adjusted by using the viewBox argument in the svg header in the header file
-
-my $HomepagePrefix = "/home/NKI/b.evers/public_html/ikrunc/";
-my $HeaderFile = $HomepagePrefix . "scripts/header";
-my $FooterFile = $HomepagePrefix . "scripts/footer";
-my $ScriptName="ReportTargetSites.pl";
+my $DirName = dirname(__FILE__);
+my $HeaderFile = $DirName . "header";
+my $FooterFile = $DirName . "footer";
 my ($Genome, $RefSeqFile, $QualitiesFileLocation);
 
 #First, set some parameters that determine how the svg file will look
@@ -24,53 +20,37 @@ my $CollisionWidth = 8;
 my $LevelOffset = 10;
 
 #Get options given to the script
-my %opts;
-getopt( 'rsnfa', \%opts );
-die "ERROR in $ScriptName: No RefSeq ID given.\n" unless my $RefSeq = $opts{'r'};
-die "ERROR in $ScriptName: No species given.\n" unless my $Species = $opts{'s'};
-my $ReportNumberOfNucleotides;
-$ReportNumberOfNucleotides=-1 unless $ReportNumberOfNucleotides = $opts{'n'};
-my $ReportFractionOfTranscript;
-$ReportFractionOfTranscript=1 unless $ReportFractionOfTranscript = $opts{'f'};
-my $ReportNucleotidesAroundStartSite;
-$ReportNucleotidesAroundStartSite=0 unless $ReportNucleotidesAroundStartSite = $opts{'a'};
+my %ScriptOptions;
+getopt('irs', \%ScriptOptions);
+print "Usage:$0 -irs\n-i File containing the sites to be displayed\n-r RefSeq ID\n-s Species. Default human\n" if !%ScriptOptions;
+die "ERROR in $0: No input file given.\n" unless my $InputFile = $ScriptOptions{'i'};
+die "ERROR in $0: No RefSeq ID given.\n" unless my $RefSeqID = $ScriptOptions{'r'};
+my $Species;
+$Species = 'human' unless $Species = $ScriptOptions{'s'};
 
 #Assign proper genome id
 $Species = lc($Species);
 if ($Species eq 'mouse') {
 	$Genome = "mm10";
-	$RefSeqFile = "/home/NKI/b.evers/mm10/scripts/RefSeq/refGene.txt";
-	$QualitiesFileLocation = "/home/NKI/b.evers/mm10/output";
+	$RefSeqFile = $DirName . "../refseq/mm10.txt";
 }
 else {
 	if ($Species eq 'human') {
 		$Genome = "hg19";
-		$RefSeqFile = "/home/NKI/b.evers/hg19/scripts/RefSeq/refGene.txt";
-		$QualitiesFileLocation = "/home/NKI/b.evers/hg19/output";
+		$RefSeqFile = "../refseq/hg19.txt";
 	}
 	else {
-		die "ERROR in $ScriptName: Species $Species is not currently handled by the iKRUNC scripts\n";
+		die "ERROR in $0: Species $Species is not currently handled by the iKRUNC scripts\n";
 	}
 }
 
-#Delete all the temporary files that were created in the last 5 minutes, to keep the temp directory small
-my $DeleteTempFilesCommand = "find " . $HomepagePrefix . "temp/* -mmin +5 -exec rm {} \\;";
-`$DeleteTempFilesCommand`;
-
-#Filter the qualities.4 file for relevant target sites. As output, use a temporary file
-my $timestamp = gettimeofday;
-print "temp/" . $timestamp . ".svg";
-`perl $HomepagePrefix/scripts/FilterAndSelect.pl -i $QualitiesFileLocation/$RefSeq.qualities.4 -o $HomepagePrefix/temp/$timestamp -c $ReportFractionOfTranscript -e $ReportNucleotidesAroundStartSite -n $ReportNumberOfNucleotides -r $RefSeq -s $Species`;
-
-#Open this temporary file and for output open a file with a similar name, but with extension .svg for the image and one with extension .svg.html for the linked table
-my $InputFile=$HomepagePrefix . "temp/" . $timestamp . ".seq";
-open (IN, $InputFile) or die "ERROR in $ScriptName: Cannot open inputfile $InputFile\n";
-open (OUT, ">", $HomepagePrefix . "temp/" . $timestamp . ".svg") or die "ERROR in $ScriptName: Cannot create svg file\n";
-open (OUTHTML, ">", $HomepagePrefix . "temp/" . $timestamp . ".svg.html") or die "ERROR in $ScriptName: Cannot create svg html file\n";
+#Open inputfile and svg file
+open (IN, $InputFile) or die "ERROR in $0: Cannot open inputfile $InputFile\n";
+open (OUT, ">", $RefSeqID . ".svg") or die "ERROR in $0: Cannot create svg file\n";
 
 #First read in all intron/exon information of the gene we're plotting
-my $RefSeqInfo = `grep -P "$RefSeq\t" $RefSeqFile`;
-die "ERROR in $ScriptName: RefSeq $RefSeq cannot be found in the database.\n" if !$RefSeqInfo;
+my $RefSeqInfo = `grep -P "$RefSeqID\t" $RefSeqFile`;
+die "ERROR in $0: RefSeq $RefSeqID cannot be found in the database.\n" if !$RefSeqInfo;
 my @RefSeqValues = split( /\t/, $RefSeqInfo );
 my $Chromosome = $RefSeqValues[2];
 my $GeneStart    = $RefSeqValues[4];
