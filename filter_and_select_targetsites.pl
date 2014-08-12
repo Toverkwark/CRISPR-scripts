@@ -176,37 +176,73 @@ foreach my $QueryGene (keys %GenesToProcess) {
 	
 			#Only write target site to output file if the cut site is either within the chosen start codon neighbourhood or within the chosen CDS fraction in which it has to be in a codingregion too  
 			if ($WithinStartCodonNeighbourHood || ($WithinChosenCDSFraction && $CutWithinCodingSequence)) {
-				my %HashOfProtospacers;
-				$HashOfProtospacers{$ProtospacerSequence}->[0]=$Chromosome;
-				$HashOfProtospacers{$ProtospacerSequence}->[1]=$Orientation;
-				$HashOfProtospacers{$ProtospacerSequence}->[2]=$CutLocation;
-				$HashOfProtospacers{$ProtospacerSequence}->[3]=$ProtospacerSequence;
-				$HashOfProtospacers{$ProtospacerSequence}->[4]=$NumberOfIdentical3PrimeTargets;
-				$HashOfProtospacers{$ProtospacerSequence}->[5]=$NumberOfIdentical3PrimeTargetsNearExons;
-				$HashOfProtospacers{$ProtospacerSequence}->[6]=$Degree;
-				$HashOfProtospacers{$ProtospacerSequence}->[7]=$ClosestRelatives;
-				$HashOfProtospacers{$ProtospacerSequence}->[8]=$ClosestRelativesNearExons;
-				$HashOfProtospacers{$ProtospacerSequence}->[9]=$Score;
-				$SelectedProtospacers{$QueryGene}->{$QueryRefSeq}=%HashOfProtospacers;
+				$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence}->[0]=$Chromosome;
+				$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence}->[1]=$Orientation;
+				$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence}->[2]=$CutLocation;
+				$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence}->[3]=$NumberOfIdentical3PrimeTargets;
+				$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence}->[4]=$NumberOfIdentical3PrimeTargetsNearExons;
+				$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence}->[5]=$Degree;
+				$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence}->[6]=$ClosestRelatives;
+				$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence}->[7]=$ClosestRelativesNearExons;
+				$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence}->[8]=$Score;
 			}
 		}
 		close (IN) or die "ERROR in $0: Cannot close inputfile $InputFile\n";
 	}
 }
 
-#Open output file
-open (OUT, ">", $OutputFile . ".seq") or die "ERROR in $0: Cannot open outputfile $OutputFile\n";
 
-#Loop over all selected protospacers to perform selection and output
-foreach my $QueryGene (sort {$a <=> $b} keys %SelectedProtospacers) {
-	foreach my $QueryRefSeq ($SelectedProtospacers{$QueryGene}) {
-		my $NumberOfProtospacers = 0;
-		foreach my $ProtospacerSequence (sort {$SelectedProtospacers{$QueryGene}->{$QueryRefSeq}->[10]) {
-			print OUT $ProtospacerSequence . "\t" . $NumberOfProtospacers . "\n";
-			$NumberOfProtospacers++;
-			last if ($NumberOfProtospacers >= $SelectNumberOfProtospacers);
+#Loop over all protospacers to write data into selected protospacers based on sequence, to group identical protospacers belonging to different RefSeqIDs
+#Select the top amount of protospacers for every RefSeq ID. Alternatively, you could choose to set this top amount on a per gene basis, or some combination of the both
+my %NumberOfProtospacersSelected;
+foreach my $QueryGene (sort keys %Protospacers) {
+	foreach my $QueryRefSeq (sort keys $Protospacers{$QueryGene}) {
+		$NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq}=0;
+		foreach my $ProtospacerSequence (sort {$Protospacers{$QueryGene}->{$QueryRefSeq}->{$b}->[8]<=>$Protospacers{$QueryGene}->{$QueryRefSeq}->{$a}->[8]} keys $Protospacers{$QueryGene}->{$QueryRefSeq}) {
+			unless ($NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq} >= $SelectNumberOfProtospacers) {
+				$NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq}++;
+				if (!$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}) {
+					$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}=$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence};
+				}
+				push(@{$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[9]},$QueryRefSeq);
+			}
 		}
 	}
 }
 
+#Open output file
+open (OUT, ">", $OutputFile . ".seq") or die "ERROR in $0: Cannot open outputfile $OutputFile\n";
+#Write output
+print OUT "Gene\tSequence\tOrientation\tIdentical 3' targets\tOf which near exons\tDegree\tRelatives\tOf which near exons\tPresent in RefSeqs\n";
+foreach my $QueryGene (sort keys %SelectedProtospacers) {
+	foreach my $ProtospacerSequence (sort keys $SelectedProtospacers{$QueryGene}) {
+		print OUT "$QueryGene\t";
+		print OUT $ProtospacerSequence . "\t";
+		print OUT $SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[1] . "\t";
+		print OUT $SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[3] . "\t";
+		print OUT $SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[4] . "\t";
+		print OUT $SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[5] . "\t";
+		print OUT $SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[6] . "\t";
+		print OUT $SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[7] . "\t";
+		my @RefSeqIDList=@{$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[9]};
+		for (@RefSeqIDList) {
+			print OUT $_;
+			if(\$_!=\$RefSeqIDList[-1]) {
+				print OUT ",";
+			}
+		}
+		print OUT "\n";
+	}
+}
 close (OUT) or die "ERROR in $0: Cannot close outputfile with sequences " . $OutputFile . ".seq\n";
+
+#Write report
+my $TotalNumberOfProtospacersSelected=0;
+foreach my $QueryGene (sort keys %SelectedProtospacers) {
+	print "$QueryGene:" . (keys $SelectedProtospacers{$QueryGene}) . " protospacers found\n";
+	$TotalNumberOfProtospacersSelected=$TotalNumberOfProtospacersSelected+scalar (keys $SelectedProtospacers{$QueryGene});
+	foreach my $QueryRefSeq (sort keys $NumberOfProtospacersSelected{$QueryGene}) {
+		print "\t" . $NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq} . " protospacers map to $QueryRefSeq\n";
+	}
+}
+print $TotalNumberOfProtospacersSelected . " protospacers selected in total\n";
