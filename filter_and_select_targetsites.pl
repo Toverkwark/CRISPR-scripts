@@ -215,8 +215,10 @@ open (OUT, ">", $OutputFile . ".seq") or die "ERROR in $0: Cannot open outputfil
 #Write output
 print OUT "Gene\tSequence\tOrientation\tIdentical 3' targets\tOf which near exons\tDegree\tRelatives\tOf which near exons\tPresent in RefSeqs\n";
 foreach my $QueryGene (sort keys %SelectedProtospacers) {
+	my $IDNumber=0;
 	foreach my $ProtospacerSequence (sort keys $SelectedProtospacers{$QueryGene}) {
-		print OUT "$QueryGene\t";
+		$IDNumber++;
+		print OUT "$QueryGene-$IDNumber\t";
 		print OUT $ProtospacerSequence . "\t";
 		print OUT $SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[1] . "\t";
 		print OUT $SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[3] . "\t";
