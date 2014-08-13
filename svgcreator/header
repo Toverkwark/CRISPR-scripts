@@ -76,7 +76,4 @@
 			<stop stop-color = "rgb(255,255,0)" offset = "100%"/>
 		</linearGradient>
 	</defs>
- 	<text x="1425" y="20" font-family="Arial" font-size="12">High score</text>
-	<rect x="1360" y="9" width="60" height="15" stroke="black" fill="url(#blueyellow)"></rect>
-	<text x="1300" y="20" font-family="Arial" font-size="12">Low score</text>
 	

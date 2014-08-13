@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" onload="init(evt)" width="100%" height="100%" viewBox="0 0 1500 130" id="svgimage">\n	<style>
+		.caption{font-size: 14px; font-family: Arial}
+		.tooltip{font-size: 12px; font-family: Arial}
+		.tooltip_bg{fill: white; stroke: black; stroke-width: 1; opacity: 0.85;}	
+	</style>
+
+	<script type="text/ecmascript">
+		<![CDATA[
+			function init(evt) {
+				if ( window.svgDocument == null ) {
+					svgDocument = evt.target.ownerDocument;
+				}
+				tooltip = svgDocument.getElementById('tooltip');
+				tooltip_bg = svgDocument.getElementById('tooltip_bg');
+			}
+
+			function ShowTooltip(evt, mouseovertext) {
+				var svg = document.querySelector('svg');
+				var ScreenTransformationMatrix = svg.getScreenCTM();
+				tooltip.firstChild.data = mouseovertext;
+				length = tooltip.getComputedTextLength()+5;
+				if((evt.offsetX/ScreenTransformationMatrix.a)>750) {
+					tooltip.setAttributeNS(null,"x",(evt.offsetX/ScreenTransformationMatrix.a)-40-length);
+				}
+				else {
+					tooltip.setAttributeNS(null,"x",(evt.offsetX/ScreenTransformationMatrix.a)+20);
+				}
+				tooltip.setAttributeNS(null,"y",(evt.offsetY/ScreenTransformationMatrix.d)+21);
+				tooltip.setAttributeNS(null,"visibility","visible");
+				tooltip_bg.setAttributeNS(null,"width",length);
+				if((evt.offsetX/ScreenTransformationMatrix.a)>750) {
+					tooltip_bg.setAttributeNS(null,"x",(evt.clientX/ScreenTransformationMatrix.a)-42-length);
+				}
+				else {
+					tooltip_bg.setAttributeNS(null,"x",(evt.clientX/ScreenTransformationMatrix.a)+18);
+				}
+				tooltip_bg.setAttributeNS(null,"y",(evt.clientY/ScreenTransformationMatrix.d)+8);
+				tooltip_bg.setAttributeNS(null,"visibility","visible");
+			}
+
+			function HideTooltip(evt) {
+				tooltip.setAttributeNS(null,"visibility","hidden");
+				tooltip_bg.setAttributeNS(null,"visibility","hidden");
+			}
+			
+			function ClickTriangle(TriangleID) {     		
+      		var path=svgDocument.getElementById(TriangleID);
+      		var CurrentTriangleColor=path.style.getPropertyValue("stroke");   			
+				if(CurrentTriangleColor=='#000000') {
+					path.style.setProperty("stroke","red", "");
+   				path.style.setProperty("stroke-width","2", "");
+				}				
+				else {
+					path.style.setProperty("stroke","black", "");
+   				path.style.setProperty("stroke-width","1", "");
+				}
+			}
+		   function AddEventListeners(CallbackFunction)
+		   {	
+		   	AllTriangles = svgDocument.getElementsByClassName('Triangle');					   	
+		   	for (var i = 0; i < AllTriangles.length; i++) {
+					AllTriangles[i].addEventListener("click", function () {CallbackFunction(this.id)}, false); 
+				}	
+		   }
+		]]>
+	</script>
+	<defs>
+		<linearGradient id = "grad1" x1 = "0%" y1 = "0%" x2 = "0%" y2 = "100%">
+			<stop stop-color = "rgb(200,200,255)" offset = "0%"/>
+			<stop stop-color = "rgb(255,255,255)" offset = "50%"/>
+			<stop stop-color = "rgb(200,200,255)" offset = "100%"/>
+		</linearGradient>
+		<linearGradient id = "blueyellow" x1 = "0%" y1 = "0%" x2 = "100%" y2 = "0%">
+			<stop stop-color = "rgb(0,0,255)" offset = "0%"/>
+			<stop stop-color = "rgb(255,255,255)" offset = "50%"/>
+			<stop stop-color = "rgb(255,255,0)" offset = "100%"/>
+		</linearGradient>
+	</defs>
+	  <rect x="0" y="61" width="100" height="8" fill="black" stroke="black" stroke-width="1" />'
+  <rect x="100" y="57" width="110.538045208532" height="16" fill="black" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 1')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="210.538045208532" y="50" width="128.36676217765" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 1')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="338.904807386183" y="50" width="419.866284622732" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 2')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="758.771092008914" y="57" width="741.228907991086" height="16" fill="black" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 2')" onmouseout="HideTooltip(evt)"/>'
+<polygon id="1"  class="Triangle" points="334.459089461955,90 338.459089461955,80 342.459089461955,90" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'ATGCAGAAATACGCACCGGTGGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(1)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 30" to="0 0" dur="0.785098616107465s"/></polygon>
+<polygon id="2"  class="Triangle" points="426.722699777141,90 430.722699777141,80 434.722699777141,90" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'GCGTGCCCGCCAACGCGGAAGGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(2)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 30" to="0 0" dur="0.519401529195846s"/></polygon>
+<polygon id="3"  class="Triangle" points="404.882521489971,90 408.882521489971,80 412.882521489971,90" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'GGCGGCCGACGTGCACGGGATGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(3)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 30" to="0 0" dur="0.016139233756018s"/></polygon>
+<polygon id="4"  class="Triangle" points="388.836676217765,90 392.836676217765,80 396.836676217765,90" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'GTAGGTGGCGTCCGGTTTGAAGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(4)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 30" to="0 0" dur="0.451996916529374s"/></polygon>
+<polygon id="5"  class="Triangle" points="334.013371537727,100 338.013371537727,90 342.013371537727,100" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'TGCAGAAATACGCACCGGTGGGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(5)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 30" to="0 0" dur="0.0684461047759051s"/></polygon>
+<polygon id="6" class="Triangle" points="340.253422476918,40 344.253422476918,50 348.253422476918,40" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'TTGCAGAGCAATATATTCGGCGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(6)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 -30" to="0 0" dur="0.417361157466061s"/></polygon>
+<polygon id="7" class="Triangle" points="226.59535179879,30 230.59535179879,40 234.59535179879,30" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'CAGGCGTTTAGCATGCCGCACGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(7)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 -30" to="0 0" dur="0.19463964728342s"/></polygon>
+<polygon id="8" class="Triangle" points="428.059853549825,30 432.059853549825,40 436.059853549825,30" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'CATCTCGCACCCTTCCGCGTTGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(8)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 -30" to="0 0" dur="0.690210484242094s"/></polygon>
+<polygon id="9" class="Triangle" points="227.932505571474,40 231.932505571474,50 235.932505571474,40" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'GCGTTTAGCATGCCGCACGGCGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(9)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 -30" to="0 0" dur="0.670441994900475s"/></polygon>
+<polygon id="10" class="Triangle" points="429.842725246737,40 433.842725246737,50 437.842725246737,40" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'TCGCACCCTTCCGCGTTGGCGGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(10)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 -30" to="0 0" dur="0.337285640708387s"/></polygon>
+	<rect class="tooltip_bg" id="tooltip_bg" x="0" y="0" width="85" height="17" visibility="hidden"/>
+	<text class="tooltip" id="tooltip" x="0" y="0" visibility="hidden">Tooltip</text>
+</svg>
