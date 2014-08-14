@@ -22,23 +22,25 @@ my $LevelOffset = 10;
 
 #Get options given to the script
 my %ScriptOptions;
-getopt('irs', \%ScriptOptions);
-print "Usage:$0 -irs\n-i File containing the sites to be displayed\n-r RefSeq ID\n-s Species. Default human\n" if !%ScriptOptions;
+getopt('iors', \%ScriptOptions);
+print "Usage:$0 -iors\n-i File containing the sites to be displayed\n-o Outputdirectory\n-r RefSeq ID\n-s Species. Default human\n" if !%ScriptOptions;
 die "ERROR in $0: No input file given.\n" unless my $InputFile = $ScriptOptions{'i'};
 die "ERROR in $0: No RefSeq ID given.\n" unless my $RefSeqID = $ScriptOptions{'r'};
+die "ERROR in $0: No output directory given.\n" unless my $OutputDirectory = $ScriptOptions{'o'};
 my $Species;
 $Species = 'human' unless $Species = $ScriptOptions{'s'};
+
 
 #Assign proper genome id
 $Species = lc($Species);
 if ($Species eq 'mouse') {
 	$Genome = "mm10";
-	$RefSeqFile = $DirName . "../refseq/mm10.txt";
+	$RefSeqFile = $DirName . "/../refseq/mm10.txt";
 }
 else {
 	if ($Species eq 'human') {
 		$Genome = "hg19";
-		$RefSeqFile = "../refseq/hg19.txt";
+		$RefSeqFile = $DirName . "/../refseq/hg19.txt";
 	}
 	else {
 		die "ERROR in $0: Species $Species is not currently handled by the iKRUNC scripts\n";
@@ -47,12 +49,12 @@ else {
 
 #Open inputfile and svg file
 open (IN, $InputFile) or die "ERROR in $0: Cannot open inputfile $InputFile\n";
-open (OUT, ">", $RefSeqID . ".svg") or die "ERROR in $0: Cannot create svg file\n";
-open (OUTHTML, ">", $RefSeqID . ".svg.html") or die "ERROR in $0: Cannot create svg html file\n";
+open (OUT, ">", $OutputDirectory . "/" . $RefSeqID . ".svg") or die "ERROR in $0: Cannot create svg file\n";
+open (OUTHTML, ">", $OutputDirectory . "/" . $RefSeqID . ".svg.html") or die "ERROR in $0: Cannot create svg html file\n";
 
 
 #First read in all intron/exon information of the gene we're plotting
-my $RefSeqInfo = `grep -P "$RefSeqID\t" $RefSeqFile`;
+my $RefSeqInfo = `grep -P "$RefSeqID\t" "$RefSeqFile"`;
 die "ERROR in $0: RefSeq $RefSeqID cannot be found in the database.\n" if !$RefSeqInfo;
 my @RefSeqValues = split( /\t/, $RefSeqInfo );
 my $Chromosome = $RefSeqValues[2];
@@ -291,8 +293,11 @@ print OUT $SVGFile;
 print OUT `cat "$FooterFile"`;
 
 #Print the table file
-print OUTHTML "<!DOCTYPE html>\n<html lang='en'>\n\t<head>\n\t\t<meta charset='utf-8'>\n\t\t<link rel='stylesheet' href='../style.css' type='text/css'></link>\n\t</head>\n";
-print OUTHTML "<body>\n<table id='svgtable' class='svgtable' width='100%'>\n";
+print OUTHTML "<!DOCTYPE html>\n<html lang='en'>\n\t<head>\n\t\t<meta charset='utf-8'>\n\t\t<style type='text/css'>\n\t\t\tbody {\n\t\t\t\tfont-family: Arial, \"Lucida Sans Unicode\";\n\t\t\t}\n\t\t</style>\n\t</head>\n";
+print OUTHTML "<body>\n";
+print OUTHTML "<h1>$RefSeqID</h1>\n";
+print OUTHTML "<iframe id='svgimageframe' src='$RefSeqID.svg' width='100%' frameborder='0' allowtransparency='true' scrolling='no'></iframe>\n";
+print OUTHTML "<table id='svgtable' class='svgtable' width='100%'>\n";
 print OUTHTML "\t<th align='left'>Chromosome</th>\n";
 print OUTHTML "\t<th align='left'>Orientation</th>\n";
 print OUTHTML "\t<th align='left'>Position</th>\n";

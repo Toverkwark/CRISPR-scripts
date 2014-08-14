@@ -5,12 +5,13 @@ use strict;
 
 my ($CDSSearchFraction, $Genome, $StartNeighbourhood, $SelectNumberOfProtospacers, $Species, $RefSeqFile, %ScriptOptions, %Protospacers, %SelectedProtospacers, %ProtospacerSequences, $OutputFile, %GenesToProcess);
 my $QualityFileLocation="/media/Data/QualityFiles/";
+my $SVGScriptFile="/media/Bastiaan_Portable/Work/Active\ Projects/Comparison\ Screens/librarydesign/scripts/svgcreator/svgcreator.pl";
 
 #Get options passed to script
-print "Usage:$0 -iocenrs\n-i Input file containing Genes and RefSeq IDs\n-o Outputfile. If none given, input filename is used appended with .selectedprotospacers\n-c Determines the fraction of each RefSeq ID to be investigated. Default 1\n-e Determines the amount of nucleotides around the startcodon to include in the search. Default 0, max 150\n-n Number of targets to be found. Default 20\n-s Species (human/mouse). Default human\n";
+print "Usage:$0 -iocenrs\n-i Input file containing Genes and RefSeq IDs\n-o Outputfile. If none given, input filename is used appended with .selectedprotospacers.csv\n-c Determines the fraction of each RefSeq ID to be investigated. Default 1\n-e Determines the amount of nucleotides around the startcodon to include in the search. Default 0, max 150\n-n Number of targets to be found. Default 20\n-s Species (human/mouse). Default human\n";
 getopt( 'iocens', \%ScriptOptions );
 die "ERROR in $0: No Inputfile given.\n" unless my $InputFile = $ScriptOptions{'i'};
-$OutputFile = $InputFile . ".selectedprotospacers" unless $OutputFile = $ScriptOptions{'o'};
+$OutputFile = $InputFile . ".selectedprotospacers.csv" unless $OutputFile = $ScriptOptions{'o'};
 $CDSSearchFraction = 1 unless $CDSSearchFraction = $ScriptOptions{'c'};
 $StartNeighbourhood = 0 unless $StartNeighbourhood = $ScriptOptions{'e'};
 die "ERROR in $0: Start neighbourhood can maximally be 150.\n" if ($StartNeighbourhood > 150); 
@@ -211,7 +212,7 @@ foreach my $QueryGene (sort keys %Protospacers) {
 }
 
 #Open output file
-open (OUT, ">", $OutputFile . ".seq") or die "ERROR in $0: Cannot open outputfile $OutputFile\n";
+open (OUT, ">", $OutputFile) or die "ERROR in $0: Cannot open outputfile $OutputFile\n";
 #Write output
 print OUT "Gene\tSequence\tChromosome\tLocation\tOrientation\tIdentical 3' targets\tOf which near exons\tDegree\tRelatives\tOf which near exons\tPresent in RefSeqs\n";
 foreach my $QueryGene (sort keys %SelectedProtospacers) {
@@ -240,13 +241,19 @@ foreach my $QueryGene (sort keys %SelectedProtospacers) {
 }
 close (OUT) or die "ERROR in $0: Cannot close outputfile with sequences " . $OutputFile . ".seq\n";
 
+my $CurrentRefSeqID=$_;
+
+
+
 #Write report
+`mkdir svgs`;
 my $TotalNumberOfProtospacersSelected=0;
 foreach my $QueryGene (sort keys %SelectedProtospacers) {
 	print "$QueryGene:" . (keys $SelectedProtospacers{$QueryGene}) . " protospacers found\n";
 	$TotalNumberOfProtospacersSelected=$TotalNumberOfProtospacersSelected+scalar (keys $SelectedProtospacers{$QueryGene});
 	foreach my $QueryRefSeq (sort keys $NumberOfProtospacersSelected{$QueryGene}) {
 		print "\t" . $NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq} . " protospacers map to $QueryRefSeq\n";
+		`perl "$SVGScriptFile" -i $OutputFile -r $QueryRefSeq -o svgs`;
 	}
 }
 print $TotalNumberOfProtospacersSelected . " protospacers selected in total\n";
