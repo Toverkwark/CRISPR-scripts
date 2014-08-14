@@ -85,7 +85,6 @@ while (defined(my $Line = <IN>)) {
 		#Verify that the target is targeting the intended RefSeqID
 		my @ListOfTargetRefSeqIDs=split(/,/,$TargetSites[10]);
 		foreach my $TargetRefSeqID (@ListOfTargetRefSeqIDs) {
-			print "Investigating $TargetRefSeqID\t";
 			if($RefSeqID eq $TargetRefSeqID) {
 				@{$DisplayObjects{$TargetOrientation}->{$TargetCutSite}}=@TargetSites;
 			}
