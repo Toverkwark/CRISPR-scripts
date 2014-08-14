@@ -1,11 +1,13 @@
 use Getopt::Std;
-use File::Basename;
 use warnings;
 use strict;
+use Cwd 'abs_path';
+use File::Basename;
 
 my ($CDSSearchFraction, $Genome, $StartNeighbourhood, $SelectNumberOfProtospacers, $Species, $RefSeqFile, %ScriptOptions, %Protospacers, %SelectedProtospacers, %ProtospacerSequences, $OutputFile, %GenesToProcess);
 my $QualityFileLocation="/media/Data/QualityFiles/";
 my $SVGScriptFile="/media/Bastiaan_Portable/Work/Active\ Projects/Comparison\ Screens/librarydesign/scripts/svgcreator/svgcreator.pl";
+my $DirName = dirname(abs_path($0));
 
 #Get options passed to script
 print "Usage:$0 -iocenrs\n-i Input file containing Genes and RefSeq IDs\n-o Outputfile. If none given, input filename is used appended with .selectedprotospacers.csv\n-c Determines the fraction of each RefSeq ID to be investigated. Default 1\n-e Determines the amount of nucleotides around the startcodon to include in the search. Default 0, max 150\n-n Number of targets to be found. Default 20\n-s Species (human/mouse). Default human\n";
@@ -31,7 +33,7 @@ else {
 		die "ERROR in $0: Species $Species is not currently handled\n";
 	}
 }
-$RefSeqFile = "refseq/$Genome.txt";
+$RefSeqFile = $DirName . "/refseq/$Genome.txt";
 $QualityFileLocation=$QualityFileLocation . $Genome . "/";
 
 #Extract information from inputfile
@@ -49,7 +51,7 @@ foreach my $QueryGene (keys %GenesToProcess) {
 		print "Querying $QueryRefSeq of $QueryGene\n";
 
 		#Find and extract RefSeq information
-		my $RefSeqInfo = `grep -P '$QueryRefSeq\t' $RefSeqFile`;
+		my $RefSeqInfo = `grep -P '$QueryRefSeq\t' "$RefSeqFile"`;
 		die "ERROR in $0: RefSeq $QueryRefSeq cannot be found in the database.\n" if !$RefSeqInfo;
 		my @RefSeqValues = split( /\t/, $RefSeqInfo );
 		my $Chromosome = $RefSeqValues[2];
