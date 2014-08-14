@@ -308,18 +308,36 @@ print OUTHTML "\t<th align='left'>Off-target #mismatches</th>\n";
 print OUTHTML "\t<th align='left'># sites</th>\n";
 print OUTHTML "\t<th align='left'># sites near exons</th>\n";
 my $Rank=0;
-foreach my $TableRow (sort {$TableObjects{$a}->[2] <=> $TableObjects{$b}->[2]} keys %TableObjects) {
-	$Rank=$Rank+1;
-	print OUTHTML "\t<tr id='" . $TableRow . ".table' onclick=parent.ClickTableRow('" . $TableRow . "')>\n";
-	print OUTHTML "\t\t<td>" . $Chromosome . "</td>\n";
-	print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[1] . "</td>\n";
-	print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[2] . "</td>\n";
-	print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[3] . "</td>\n";
-	print OUTHTML "\t\t<td>" . ($TableObjects{$TableRow}->[4] -1) . "</td>\n";
-	print OUTHTML "\t\t<td>" . ($TableObjects{$TableRow}->[5] -1) . "</td>\n";
-	print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[6] . "</td>\n";
-	print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[7] . "</td>\n";
-	print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[8] . "</td>\n";
+if ($GeneOrientation eq '-')
+{
+	foreach my $TableRow (sort {$TableObjects{$b}->[2] <=> $TableObjects{$a}->[2]} keys %TableObjects) {
+    	$Rank=$Rank+1;
+    	print OUTHTML "\t<tr id='" . $TableRow . ".table' onclick=parent.ClickTableRow('" . $TableRow . "')>\n";
+    	print OUTHTML "\t\t<td>" . $Chromosome . "</td>\n";
+    	print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[1] . "</td>\n";
+    	print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[2] . "</td>\n";
+    	print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[3] . "</td>\n";
+    	print OUTHTML "\t\t<td>" . ($TableObjects{$TableRow}->[4] -1) . "</td>\n";
+    	print OUTHTML "\t\t<td>" . ($TableObjects{$TableRow}->[5] -1) . "</td>\n";
+    	print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[6] . "</td>\n";
+    	print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[7] . "</td>\n";
+    	print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[8] . "</td>\n";
+	}
+}
+else {
+	foreach my $TableRow (sort {$TableObjects{$a}->[2] <=> $TableObjects{$b}->[2]} keys %TableObjects) {
+		$Rank=$Rank+1;
+		print OUTHTML "\t<tr id='" . $TableRow . ".table' onclick=parent.ClickTableRow('" . $TableRow . "')>\n";
+		print OUTHTML "\t\t<td>" . $Chromosome . "</td>\n";
+		print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[1] . "</td>\n";
+		print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[2] . "</td>\n";
+		print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[3] . "</td>\n";
+		print OUTHTML "\t\t<td>" . ($TableObjects{$TableRow}->[4] -1) . "</td>\n";
+		print OUTHTML "\t\t<td>" . ($TableObjects{$TableRow}->[5] -1) . "</td>\n";
+		print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[6] . "</td>\n";
+		print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[7] . "</td>\n";
+		print OUTHTML "\t\t<td>" . $TableObjects{$TableRow}->[8] . "</td>\n";
+	}
 }
 print OUTHTML "</table>\n</body>\n";
 print OUTHTML "</html>";
