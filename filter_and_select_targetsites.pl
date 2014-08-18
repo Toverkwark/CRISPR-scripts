@@ -205,11 +205,14 @@ foreach my $QueryGene (sort keys %Protospacers) {
 			unless ($NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq} >= $SelectNumberOfProtospacers) {
 				#Make sure to not select gRNA sequences containing 4 or more Ts
 				if (index($ProtospacerSequence,'TTTT')==-1) {
-					$NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq}++;
-					if (!$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}) {
-						$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}=$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence};
+					#Because this library will be digested with BsmBI, also preven gRNAs with recognition sequences for that
+					if(index($ProtospacerSequence,'CGTCTC')==-1 && index($ProtospacerSequence,'GAGACG')==-1) {
+						$NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq}++;
+						if (!$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}) {
+							$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}=$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence};
+						}
+						push(@{$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[9]},$QueryRefSeq);
 					}
-					push(@{$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[9]},$QueryRefSeq);
 				}
 			}
 		}
