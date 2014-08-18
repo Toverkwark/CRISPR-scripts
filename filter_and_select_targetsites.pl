@@ -203,11 +203,14 @@ foreach my $QueryGene (sort keys %Protospacers) {
 		$NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq}=0;
 		foreach my $ProtospacerSequence (sort {$Protospacers{$QueryGene}->{$QueryRefSeq}->{$b}->[8]<=>$Protospacers{$QueryGene}->{$QueryRefSeq}->{$a}->[8]} keys $Protospacers{$QueryGene}->{$QueryRefSeq}) {
 			unless ($NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq} >= $SelectNumberOfProtospacers) {
-				$NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq}++;
-				if (!$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}) {
-					$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}=$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence};
+				#Make sure to not select gRNA sequences containing 4 or more Ts
+				if (index($ProtospacerSequence,'TTTT')==-1) {
+					$NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq}++;
+					if (!$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}) {
+						$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}=$Protospacers{$QueryGene}->{$QueryRefSeq}->{$ProtospacerSequence};
+					}
+					push(@{$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[9]},$QueryRefSeq);
 				}
-				push(@{$SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[9]},$QueryRefSeq);
 			}
 		}
 	}
