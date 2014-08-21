@@ -1,15 +1,15 @@
 sub DetermineDamerauLevenshteinDistance($$);
-use strict;
+#use strict;
 
-my $a = "abcdefghijkl";
-my $b = "abxxdefxghij";
-DetermineDamerauLevenshteinDistance( $a, $b );
+my $First =  "abcdefghijkl";
+my $Second = "abcdefghijl";
+DetermineDamerauLevenshteinDistance( $First, $Second );
 
 sub DetermineDamerauLevenshteinDistance ($$) {
 	my ( $e, $f ) = @_;
 	print "$e\n$f\n";
-	my @a = split( "", $e );
-	my @b = split( "", $f );
+	my @First = split( "", $e );
+	my @Second = split( "", $f );
 
 	my $Rows = length($e);
 	my $Columns = length($f);
@@ -27,7 +27,7 @@ sub DetermineDamerauLevenshteinDistance ($$) {
 	for ( $Row = 1 ; $Row <= $Rows ; $Row++ ) {
 		for ( $Column = 1 ; $Column <= $Columns ; $Column++ ) {
 			my $cost = 1;
-			$cost = 0 if ( $a[$Row-1] eq $b[$Column-1]);
+			$cost = 0 if ( $First[$Row-1] eq $Second[$Column-1]);
 			my $Change_a = $d[$Row][$Column-1]+1;
 			my $Change_b  = $d[$Row-1][$Column]+1;
 			my $Change_c  = $d[$Row-1][$Column-1] + $cost;
@@ -43,47 +43,47 @@ sub DetermineDamerauLevenshteinDistance ($$) {
 				}
 			}
 		}
+		
 	}
-	#Print de tabel
+	#Print the table and fill info for finding back mutations
+	my @IdenticalMinimalValues;
+	my @Indices;
+	my @Distances;
+	my %MinimalDistanceTable;
 	for ($Row=0;$Row<=$Rows;$Row++) {
+		my %ColumnValues;
 		for($Column=0;$Column<=$Columns;$Column++) {
+			$ColumnValues{$Column}=$d[$Row][$Column];
 			my $result = sprintf( "%02d", $d[$Row][$Column] );
 			print " " . $result;
 		}
-		print "\n";
-	}
-
-	#Lees terug wat de veranderingen zijn
-	my $MinimalScore  = $d[$Rows][$Columns];
-	my $CurrentColumn = $Columns-1;
-	for ( $Row = ($Rows-1); $Row >= 0 ; $Row-- ) {
-		my @EventsDetectedOnRow;
-		for ( $Column = 1 ; $Column <= $Columns ; $Column++ ) {
-			if ( $d[$Row][$Column] < $MinimalScore ) {
-				push( @EventsDetectedOnRow, $Column);
-			}
-		}
-		if ( scalar(@EventsDetectedOnRow) == 1 ) {
-			if ( $EventsDetectedOnRow[0] < $CurrentColumn ) {
-				print "Insertion found at position " . ( $Row + 1 ) . "\n";
-				$CurrentColumn--;
+		my @SortedColumnValues=sort {$a<=>$b} @{$d[$Row]};
+		my $NumberOfIdenticalMinimalValues=0;
+		foreach (@SortedColumnValues) {
+			if ($_ == $SortedColumnValues[0]) {
+				$NumberOfIdenticalMinimalValues++;
 			}
 			else {
-				if ( $EventsDetectedOnRow[0] > $CurrentColumn ) {
-					print "Deletion found at position " . ( $Row + 1 ) . "\n";
-					$CurrentColumn++;
-				}
-				else {
-					print "Mutation found at position " . ( $Row + 1 ) . "\n";
-					$CurrentColumn--;
-				}
+				last;
 			}
 		}
-		if(scalar (@EventsDetectedOnRow)>0) {
-			$MinimalScore=$MinimalScore-1;	
-		}
-		$CurrentColumn--;
+		print "\n";
+		my @SortedIndices=sort { @{$d[$Row]}[$a] <=> @{$d[$Row]}[$b]} 0..$#{$d[$Row]};
+		$MinimalDistanceTable{$Row}->{'NumberOfIdenticalMinimalValues'}=$NumberOfIdenticalMinimalValues;
+		$MinimalDistanceTable{$Row}->{'Index'}=$SortedIndices[0];
+		$MinimalDistanceTable{$Row}->{'Distance'}=$SortedColumnValues[0];
 	}
+
+ 	#Read back mutations
+ 	
+ 	print "\n\n";
+ 	foreach $Row (sort {$b <=> $a} keys %MinimalDistanceTable) {
+ 		print $MinimalDistanceTable{$Row}->{'NumberOfIdenticalMinimalValues'} . "\t";
+ 		print $MinimalDistanceTable{$Row}->{'Index'} . "\t";
+ 		print $MinimalDistanceTable{$Row}->{'Distance'} . "\n";
+ 	}
+ 	print "\n\n";
+ 		
 	my $distance = $d[$Rows][$Columns];
 	print "Total distance is $distance\n";
 }
