@@ -1,8 +1,8 @@
 sub DetermineDamerauLevenshteinDistance($$);
-#use strict;
+use strict;
 
 my $First =  "abcdefghijkl";
-my $Second = "abcdefghijl";
+my $Second = "abcdefghixjkl";
 DetermineDamerauLevenshteinDistance( $First, $Second );
 
 sub DetermineDamerauLevenshteinDistance ($$) {
@@ -28,20 +28,10 @@ sub DetermineDamerauLevenshteinDistance ($$) {
 		for ( $Column = 1 ; $Column <= $Columns ; $Column++ ) {
 			my $cost = 1;
 			$cost = 0 if ( $First[$Row-1] eq $Second[$Column-1]);
-			my $Change_a = $d[$Row][$Column-1]+1;
-			my $Change_b  = $d[$Row-1][$Column]+1;
-			my $Change_c  = $d[$Row-1][$Column-1] + $cost;
-			if ( ($Change_c < $Change_a) && ($Change_c < $Change_b) ) {
-				$d[$Row][$Column] = $Change_c;
-			}
-			else {
-				if ( ($Change_b < $Change_c) ) {
-					$d[$Row][$Column] = $Change_b;
-				}
-				else {
-					$d[$Row][$Column] = $Change_a;
-				}
-			}
+			$d[$Row][$Column] = $d[$Row][$Column-1]+1;
+			$d[$Row][$Column] = ($d[$Row-1][$Column]+1) if (($d[$Row-1][$Column]+1) < $d[$Row][$Column]);
+			$d[$Row][$Column] = ($d[$Row-1][$Column-1] + $cost) if (($d[$Row-1][$Column-1] + $cost) < $d[$Row][$Column]);
+
 		}
 		
 	}
@@ -75,15 +65,58 @@ sub DetermineDamerauLevenshteinDistance ($$) {
 	}
 
  	#Read back mutations
- 	
+ 	my $Distance = $d[$Rows][$Columns];
+ 	my $CurrentDistance=$Distance;
+ 	my $Up;
+ 	my $Left;
+ 	my $Diagonal;
+ 	$Row=$Rows;
+ 	$Column=$Columns;
  	print "\n\n";
- 	foreach $Row (sort {$b <=> $a} keys %MinimalDistanceTable) {
- 		print $MinimalDistanceTable{$Row}->{'NumberOfIdenticalMinimalValues'} . "\t";
- 		print $MinimalDistanceTable{$Row}->{'Index'} . "\t";
- 		print $MinimalDistanceTable{$Row}->{'Distance'} . "\n";
- 	}
- 	print "\n\n";
+ 	do {
+ 		$Up=$d[$Row-1][$Column];
+ 		$Left=$d[$Row][$Column-1];
+ 		$Diagonal=$d[$Row-1][$Column-1];
+ 		print "Row:$Row\tColumn:$Column\tUp:$Up\tLeft:$Left\tDiagonal:$Diagonal\t$CurrentDistance\n";
  		
-	my $distance = $d[$Rows][$Columns];
-	print "Total distance is $distance\n";
+ 		if($Diagonal<$Left && $Diagonal<$Up) {
+ 			if($Diagonal<$CurrentDistance) {
+ 				print "mutation at nucleotide " . $Row . "\n";
+ 				$CurrentDistance--;
+ 			}
+ 			$Row--;
+ 			$Column--;
+ 		}
+ 		else {
+ 			if($Left<$Up && $Diagonal!=$Left) {
+ 				print "insertion at nucleotide " . $Row . "\n";
+ 				$Column--;
+ 				$CurrentDistance--;
+ 			}
+ 			else {
+ 				if($Diagonal!=$Up && $Diagonal!=$Left && $Up!=$Left) {
+ 					print "deletion at nucleotide " . $Row . "\n";
+ 					$Row--;
+ 					$CurrentDistance--;
+ 				}
+ 				else {
+ 					print "complex mutation detected\n";
+ 					$Row=1;
+ 					$Column=1
+ 				}
+ 			}
+		}	 		
+ 	} while ($Row>1 && $Column>1);
+ 	print "Row:$Row\tColumn:$Column\tUp:$Up\tLeft:$Left\tDiagonal:$Diagonal\t$CurrentDistance\n";
+ 		
+ 	while ($Row>1) {
+ 		print "deletion at nucleotide " . ($Row-1) . "\n";
+ 		$Row--
+ 	}
+ 	while ($Column>1) {
+ 		print "insertion at nucleotide " . $Row . "\n";
+ 		$Column--
+ 	} 
+ 	
+	print "Total distance is $Distance\n";
 }
