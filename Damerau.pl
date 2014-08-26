@@ -2,7 +2,7 @@ sub DetermineDamerauLevenshteinDistance($$);
 use strict;
 
 my $First =  "abcdefghijkl";
-my $Second = "abcdefghixjkl";
+my $Second = "abcxdefghijk";
 DetermineDamerauLevenshteinDistance( $First, $Second );
 
 sub DetermineDamerauLevenshteinDistance ($$) {
@@ -77,44 +77,47 @@ sub DetermineDamerauLevenshteinDistance ($$) {
  		$Up=$d[$Row-1][$Column];
  		$Left=$d[$Row][$Column-1];
  		$Diagonal=$d[$Row-1][$Column-1];
- 		print "Row:$Row\tColumn:$Column\tUp:$Up\tLeft:$Left\tDiagonal:$Diagonal\t$CurrentDistance\n";
- 		
- 		if($Diagonal<$Left && $Diagonal<$Up) {
- 			if($Diagonal<$CurrentDistance) {
- 				print "mutation at nucleotide " . $Row . "\n";
- 				$CurrentDistance--;
- 			}
+ 		#print "Row:$Row\tColumn:$Column\tUp:$Up\tLeft:$Left\tDiagonal:$Diagonal\t$CurrentDistance\n";
+ 		 if($Diagonal==$CurrentDistance && $Left>=$Diagonal && $Up>=$Diagonal) {
  			$Row--;
  			$Column--;
  		}
  		else {
- 			if($Left<$Up && $Diagonal!=$Left) {
- 				print "insertion at nucleotide " . $Row . "\n";
+ 			if($Diagonal<$CurrentDistance && $Diagonal<$Up && $Diagonal<$Left) {
+ 				print "mutation at nucleotide " . $Row . "\n";	
+ 				$Row--;
  				$Column--;
  				$CurrentDistance--;
  			}
  			else {
- 				if($Diagonal!=$Up && $Diagonal!=$Left && $Up!=$Left) {
- 					print "deletion at nucleotide " . $Row . "\n";
- 					$Row--;
+ 				if($Left<$CurrentDistance && $Left<$Diagonal && $Left<$Up) {
+ 					print "insertion at nucleotide " . $Row . "\n";
+ 					$Column--;
  					$CurrentDistance--;
  				}
  				else {
- 					print "complex mutation detected\n";
- 					$Row=1;
- 					$Column=1
- 				}
+ 					if($Up<$CurrentDistance && $Up<$Diagonal && $Up <$Left) {
+ 						print "deletion at nucleotide " . $Row . "\n";
+ 						$Row--;
+ 						$CurrentDistance--;
+ 					}
+ 					else {
+ 						print "Could not accurately determine mutation\n";
+ 						$Row--;
+ 						$Column--;
+ 					}
+ 				}	
  			}
-		}	 		
- 	} while ($Row>1 && $Column>1);
- 	print "Row:$Row\tColumn:$Column\tUp:$Up\tLeft:$Left\tDiagonal:$Diagonal\t$CurrentDistance\n";
+ 		}
+ 	} while ($Row>0 && $Column>0);
+ 	#print "Row:$Row\tColumn:$Column\tUp:$Up\tLeft:$Left\tDiagonal:$Diagonal\t$CurrentDistance\n";
  		
- 	while ($Row>1) {
- 		print "deletion at nucleotide " . ($Row-1) . "\n";
+ 	while ($Row>0) {
+ 		print "deletion at nucleotide " . $Row . "\n";
  		$Row--
  	}
- 	while ($Column>1) {
- 		print "insertion at nucleotide " . $Row . "\n";
+ 	while ($Column>0) {
+ 		print "insertion at nucleotide " . ($Row+1) . "\n";
  		$Column--
  	} 
  	
