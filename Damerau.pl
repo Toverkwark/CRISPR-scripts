@@ -1,13 +1,23 @@
-sub DetermineDamerauLevenshteinDistance($$);
+sub DetermineDamerauLevenshteinDistance($$$);
 use strict;
 
-my $First =  "abcdefghijkl";
-my $Second = "abcxdefghijk";
-DetermineDamerauLevenshteinDistance( $First, $Second );
+my $First =  "abcccdefghijkl";
+my $Second = "abcdefghijk";
+my %ReturnHash;
+DetermineDamerauLevenshteinDistance( $First, $Second, \%ReturnHash );
+if ($ReturnHash{'AccuratelyDetermined'}) {
+	print "Total Distance:" . $ReturnHash{'Distance'} . "\n";
+	foreach my $Change (keys $ReturnHash{'Changes'}) {
+		print "$Change\t" . $ReturnHash{'Changes'}->{$Change} . "\n";
+	}
+}
+else {
+	print "Could not accurately determine match\n";	
+} 
 
-sub DetermineDamerauLevenshteinDistance ($$) {
-	my ( $e, $f ) = @_;
-	print "$e\n$f\n";
+sub DetermineDamerauLevenshteinDistance ($$$) {
+	my ( $e, $f, $ReturnHash ) = @_;
+	#print "$e\n$f\n";
 	my @First = split( "", $e );
 	my @Second = split( "", $f );
 
@@ -35,34 +45,6 @@ sub DetermineDamerauLevenshteinDistance ($$) {
 		}
 		
 	}
-	#Print the table and fill info for finding back mutations
-	my @IdenticalMinimalValues;
-	my @Indices;
-	my @Distances;
-	my %MinimalDistanceTable;
-	for ($Row=0;$Row<=$Rows;$Row++) {
-		my %ColumnValues;
-		for($Column=0;$Column<=$Columns;$Column++) {
-			$ColumnValues{$Column}=$d[$Row][$Column];
-			my $result = sprintf( "%02d", $d[$Row][$Column] );
-			print " " . $result;
-		}
-		my @SortedColumnValues=sort {$a<=>$b} @{$d[$Row]};
-		my $NumberOfIdenticalMinimalValues=0;
-		foreach (@SortedColumnValues) {
-			if ($_ == $SortedColumnValues[0]) {
-				$NumberOfIdenticalMinimalValues++;
-			}
-			else {
-				last;
-			}
-		}
-		print "\n";
-		my @SortedIndices=sort { @{$d[$Row]}[$a] <=> @{$d[$Row]}[$b]} 0..$#{$d[$Row]};
-		$MinimalDistanceTable{$Row}->{'NumberOfIdenticalMinimalValues'}=$NumberOfIdenticalMinimalValues;
-		$MinimalDistanceTable{$Row}->{'Index'}=$SortedIndices[0];
-		$MinimalDistanceTable{$Row}->{'Distance'}=$SortedColumnValues[0];
-	}
 
  	#Read back mutations
  	my $Distance = $d[$Rows][$Columns];
@@ -72,37 +54,40 @@ sub DetermineDamerauLevenshteinDistance ($$) {
  	my $Diagonal;
  	$Row=$Rows;
  	$Column=$Columns;
- 	print "\n\n";
+ 	$$ReturnHash{'AccuratelyDetermined'}=1;
  	do {
  		$Up=$d[$Row-1][$Column];
  		$Left=$d[$Row][$Column-1];
  		$Diagonal=$d[$Row-1][$Column-1];
- 		#print "Row:$Row\tColumn:$Column\tUp:$Up\tLeft:$Left\tDiagonal:$Diagonal\t$CurrentDistance\n";
- 		 if($Diagonal==$CurrentDistance && $Left>=$Diagonal && $Up>=$Diagonal) {
+ 		if($Diagonal==$CurrentDistance && $Left>=$Diagonal && $Up>=$Diagonal) {
  			$Row--;
  			$Column--;
  		}
  		else {
  			if($Diagonal<$CurrentDistance && $Diagonal<$Up && $Diagonal<$Left) {
- 				print "mutation at nucleotide " . $Row . "\n";	
+ 				$$ReturnHash{'Changes'}->{$Row}="Mutation";
+ 				#print "mutation at nucleotide " . $Row . "\n";	
  				$Row--;
  				$Column--;
  				$CurrentDistance--;
  			}
  			else {
  				if($Left<$CurrentDistance && $Left<$Diagonal && $Left<$Up) {
- 					print "insertion at nucleotide " . $Row . "\n";
+ 					$$ReturnHash{'Changes'}->{$Row}="Insertion";
+ 					#print "insertion at nucleotide " . $Row . "\n";
  					$Column--;
  					$CurrentDistance--;
  				}
  				else {
  					if($Up<$CurrentDistance && $Up<$Diagonal && $Up <$Left) {
- 						print "deletion at nucleotide " . $Row . "\n";
+ 						$$ReturnHash{'Changes'}->{$Row}="Deletion";
+ 						#print "deletion at nucleotide " . $Row . "\n";
  						$Row--;
  						$CurrentDistance--;
  					}
  					else {
- 						print "Could not accurately determine mutation\n";
+ 						$$ReturnHash{'AccuratelyDetermined'}=0;
+ 						#print "Could not accurately determine mutation\n";
  						$Row--;
  						$Column--;
  					}
@@ -110,16 +95,18 @@ sub DetermineDamerauLevenshteinDistance ($$) {
  			}
  		}
  	} while ($Row>0 && $Column>0);
- 	#print "Row:$Row\tColumn:$Column\tUp:$Up\tLeft:$Left\tDiagonal:$Diagonal\t$CurrentDistance\n";
  		
  	while ($Row>0) {
- 		print "deletion at nucleotide " . $Row . "\n";
+ 		$$ReturnHash{'Changes'}->{$Row}="Deletion";
+ 		#print "deletion at nucleotide " . $Row . "\n";
  		$Row--
  	}
  	while ($Column>0) {
+ 		$$ReturnHash{'Changes'}->{$Row}="Insertion";				
  		print "insertion at nucleotide " . ($Row+1) . "\n";
  		$Column--
  	} 
  	
-	print "Total distance is $Distance\n";
+ 	$$ReturnHash{'Distance'}=$Distance;
+	#print "Total distance is $Distance\n";
 }
