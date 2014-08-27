@@ -1,4 +1,5 @@
 use Getopt::Long;
+require "Damerau.pl";
 sub MatchBarcode($@);
 sub ScoreTwoStrings($$);
 
@@ -68,22 +69,24 @@ while ( defined( my $line = <INPUT> ) ) {
 		}
 	}
 
-	#Try to match part of the promoter and calculate an offset based on the first match encountered for 9 nucleotides, then move on
-	#Start by trying to match on the position that it should be, only if that doesn't fit, do a loop
+	#Try to find the leading sequence and record any mistakes there. Determine an offset in case it is found
 	my $Offset = 0;
-	if ( substr( $Sequence, ($BarcodeLength+$BarcodeOffset), length($ExpectedTrailingSequence)) eq $ExpectedTrailingSequence ) {
-		$PromoterFound=1;
-		$Results{$Barcode}->{'ExactTrailingSequenceFound'}++;
+	if ( substr( $Sequence, ($BarcodeLength+$BarcodeOffset), length($ExpectedLeadingSequence)) eq $ExpectedLeadingSequence ) {
+		$Results{$Barcode}->{'LeadingSequencesFound'}++;
+		$Results{$Barcode}->{'ExactLeadingSequencesFound'}++;
 	}
 	else {
-		for ( my $i = 0 ; $i <= length($Sequence) - 6 ; $i++ ) {
-			if ( substr( $Sequence, 6 + $i, 9 ) eq 'CCCTATCAG' ) {
-				$PromoterFound=1;
-				$Results{$Barcode}->[2]++;
-				$Offset = $i;
-				last;
+		my %DamerauResults;
+		my $NotConvergedOffset=1;
+		while ($NotConvergedOffset) {
+			DetermineDamerauLevenshteinDistance($ExpectedLeadingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset), length($ExpectedLeadingSequence),\%DamerauResults);
+			if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdForAnalysis) {
+				#Record the errors found in the Leading sequence
+				#Determine the offset for the inserts
+				#Output the results only if threshold is matched
+				#Determine if offset is converged
 			}
-		}
+		}		
 	}
 	
 	#Extract all construct features assuming all offsets are correct
