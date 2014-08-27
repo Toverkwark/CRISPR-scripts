@@ -1,4 +1,5 @@
 use Getopt::Long;
+use strict;
 require "Damerau.pl";
 sub MatchBarcode($@);
 sub ScoreTwoStrings($$);
@@ -10,8 +11,16 @@ my $BarcodeOffset = 0; #Position of start of barcode
 my $BarcodeLength = 6; #Number of nucleotides that the barcode is long
 my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTTGAATTC"; #Sequence that is expected to come after the gRNA/shRNA sequence
-my $ErrorThresholdForAnalysis = 3; #This number of mutations of indels can be present in both leading and trialing sequences and it the sequence will still be taken along in the analysis
-my $ErrorThresholdForFiltering = 1;#This number of mutations of indels can be present in both leading and trialing sequences and it the sequence will still be accepted in the output filtering
+my $ErrorThresholdLeading = 3; #This number of mutations or indels can be present in the leading  sequences
+my $ErrorThresholdTrailing = 3; #This number of mutations or indels can be present in the trailing sequences
+my @Barcodes = qw(CGTGAT ACATCG GCCTAA TGGTCA CACTGT ATTGGC GATCTG TCAAGT CTGATC AAGCTA GTAGCC TACAAG);
+my %Results  = ();
+my %LeadingErrors;
+my %TrailingErrors;
+my $InputFile;
+my $OutputFile;
+my $ReportFile;
+my $RecordsAnalyzed;
 
 GetOptions(
 	"input=s"  => \$InputFile,
@@ -27,8 +36,6 @@ if ( !$ReportFile ) {
 	$ReportFile = $InputFile . ".report";
 }
 
-@Barcodes = qw(CGTGAT ACATCG GCCTAA TGGTCA CACTGT ATTGGC GATCTG TCAAGT CTGATC AAGCTA GTAGCC TACAAG);
-%Results  = ();
 open( INPUT, $InputFile ) or die "ERROR in $0:Input file $InputFile is not accessible.\n";
 open( OUTPUT, ">", $OutputFile ) or die "ERROR in $0:Output file $OutputFile is not accessible.\n";
 open( REPORT, ">", $ReportFile ) or die "ERROR in $0:Report file $ReportFile is not accessible.\n";
@@ -44,15 +51,15 @@ while ( defined( my $line = <INPUT> ) ) {
 	if ( !( $RecordsAnalyzed % 100000 ) ) {
 		print "Analyzing record $RecordsAnalyzed\n";
 	}
-	$line2    = <INPUT>;
-	$line3    = <INPUT>;
-	$line4    = <INPUT>;
+	my $line2    = <INPUT>;
+	my $line3    = <INPUT>;
+	my $line4    = <INPUT>;
 	chomp($line2);
-	$Sequence = $line2;
+	my $Sequence = $line2;
 
 	#Get the barcode. See if it exists. If not, try to map it with maximally 1 nucleotide replacement and only 1 match existing.
 	#if that can be found, make sure to also write the output file sequences with the mapped barcode
-	$Barcode = substr( $Sequence, $BarcodeOffset, $BarcodeLength );
+	my $Barcode = substr( $Sequence, $BarcodeOffset, $BarcodeLength );
 	if ( grep( /$Barcode/, @Barcodes ) ) {
 		$BarcodeMatched=1;
 		$Results{$Barcode}->[0]++;
@@ -71,23 +78,43 @@ while ( defined( my $line = <INPUT> ) ) {
 
 	#Try to find the leading sequence and record any mistakes there. Determine an offset in case it is found
 	my $Offset = 0;
+	my $LeadingSequenceFound=0;
 	if ( substr( $Sequence, ($BarcodeLength+$BarcodeOffset), length($ExpectedLeadingSequence)) eq $ExpectedLeadingSequence ) {
 		$Results{$Barcode}->{'LeadingSequencesFound'}++;
 		$Results{$Barcode}->{'ExactLeadingSequencesFound'}++;
+		$LeadingSequenceFound=1;
 	}
 	else {
-		my %DamerauResults;
 		my $NotConvergedOffset=1;
 		while ($NotConvergedOffset) {
-			DetermineDamerauLevenshteinDistance($ExpectedLeadingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset), length($ExpectedLeadingSequence),\%DamerauResults);
-			if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdForAnalysis) {
+			my %DamerauResults;
+			DetermineDamerauLevenshteinDistance($ExpectedLeadingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$Offset)),\%DamerauResults);
+			if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdLeading) {
+				$NotConvergedOffset=0;
 				#Record the errors found in the Leading sequence
-				#Determine the offset for the inserts
+				foreach my $Change (keys $DamerauResults{Changes}) {
+					$LeadingErrors{$Change}->($DamerauResults{'Changes'}->{$Change})++;
+					if($Change==(length($ExpectedLeadingSequence)+$Offset)) {
+						if($DamerauResults{'Changes'}->{$Change}=='Insertion') {
+							$Offset++;
+							$NotConvergedOffset=1;
+						}
+						if($DamerauResults{'Changes'}->{$Change}=='Insertion') {
+							$Offset--;
+							$NotConvergedOffset=1;
+						}
+					}
+				}
+				$LeadingSequenceFound=1 if (!$NotConvergedOffset);
 				#Output the results only if threshold is matched
-				#Determine if offset is converged
+			}
+			else {
+				$NotConvergedOffset=0;
+				
 			}
 		}		
 	}
+	
 	
 	#Extract all construct features assuming all offsets are correct
 	$promoter = substr( $Sequence, 6 + $Offset,  24);
