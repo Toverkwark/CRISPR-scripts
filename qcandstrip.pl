@@ -1,5 +1,5 @@
 use Getopt::Long;
-use strict;
+#use strict;
 require "Damerau.pl";
 sub MatchBarcode($@);
 sub ScoreTwoStrings($$);
@@ -56,70 +56,81 @@ while ( defined( my $line = <INPUT> ) ) {
 	my $line4    = <INPUT>;
 	chomp($line2);
 	my $Sequence = $line2;
-
+print "$Sequence\n";
 	#Get the barcode. See if it exists. If not, try to map it with maximally 1 nucleotide replacement and only 1 match existing.
 	#if that can be found, make sure to also write the output file sequences with the mapped barcode
 	my $Barcode = substr( $Sequence, $BarcodeOffset, $BarcodeLength );
 	if ( grep( /$Barcode/, @Barcodes ) ) {
 		$BarcodeMatched=1;
-		$Results{$Barcode}->[0]++;
+		$Results{$Barcode}->[0]++; #Barcodes found
+		$Results{$Barcode}->[1]++; #Exact barcodes found
 	}
 	else {
 		my $MatchedBarcode = MatchBarcode( $Barcode, @Barcodes );
 		if ($MatchedBarcode) {
 			$Barcode = $MatchedBarcode;
 			$BarcodeMatched=1;
-			$Results{$Barcode}->{'BarcodesFound'}++;
-			$Results{$Barcode}->{'BarcodesFoundByMatching'}++;
+			$Results{$Barcode}->[0]++;
 			#Change the barcode in the outputfile to the one it was matched to
 			$line2 = substr($Sequence,0,$BarcodeOffset) . $Barcode . substr($Sequence,$BarcodeLength+$BarcodeOffset,length($Sequence-$BarcodeOffset)-$BarcodeLength);
 		}
 	}
 
 	#Try to find the leading sequence and record any mistakes there. Determine an offset in case it is found
-	my $Offset = 0;
+	my $LeadingOffset = 0;
 	my $LeadingSequenceFound=0;
+	my %DamerauResults;
+	my $NotConvergedOffset=1;
 	if ( substr( $Sequence, ($BarcodeLength+$BarcodeOffset), length($ExpectedLeadingSequence)) eq $ExpectedLeadingSequence ) {
-		$Results{$Barcode}->{'LeadingSequencesFound'}++;
-		$Results{$Barcode}->{'ExactLeadingSequencesFound'}++;
+		$Results{$Barcode}->[2]++; #Leading sequences found
+		$Results{$Barcode}->[3]++; #Exact leading sequences found
+		print "Exact leading sequence found\n";
 		$LeadingSequenceFound=1;
 	}
 	else {
-		my $NotConvergedOffset=1;
+		$NotConvergedOffset=1;
 		while ($NotConvergedOffset) {
-			my %DamerauResults;
-			DetermineDamerauLevenshteinDistance($ExpectedLeadingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$Offset)),\%DamerauResults);
+			undef %DamerauResults;
+			DetermineDamerauLevenshteinDistance($ExpectedLeadingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$LeadingOffset)),\%DamerauResults);
 			if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdLeading) {
 				$NotConvergedOffset=0;
 				#Record the errors found in the Leading sequence
 				foreach my $Change (keys $DamerauResults{Changes}) {
-					$LeadingErrors{$Change}->($DamerauResults{'Changes'}->{$Change})++;
-					if($Change==(length($ExpectedLeadingSequence)+$Offset)) {
+					if($Change==(length($ExpectedLeadingSequence)+$LeadingOffset)) {
 						if($DamerauResults{'Changes'}->{$Change}=='Insertion') {
-							$Offset++;
+							$LeadingOffset++;
 							$NotConvergedOffset=1;
 						}
-						if($DamerauResults{'Changes'}->{$Change}=='Insertion') {
-							$Offset--;
+						if($DamerauResults{'Changes'}->{$Change}=='Deletion') {
+							$LeadingOffset--;
 							$NotConvergedOffset=1;
 						}
 					}
 				}
-				$LeadingSequenceFound=1 if (!$NotConvergedOffset);
-				#Output the results only if threshold is matched
 			}
 			else {
-				$NotConvergedOffset=0;
-				
+				$NotConvergedOffset=0;		
 			}
 		}		
 	}
 	
+	if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdLeading) {
+		$LeadingSequenceFound=1;
+		print "Leading sequence found with changes:";
+		foreach my $Change (keys $DamerauResults{Changes}) {
+			$LeadingErrors{$Change}->($DamerauResults{'Changes'}->{$Change})++;
+			print $DamerauResults{'Changes'}->{$Change} . " @" . $Change . " - ";
+		}
+		print "\n";
+	} 
+	print "No leading sequence found\n" if !$LeadingSequenceFound;
+	
+	
 	
 	#Extract all construct features assuming all offsets are correct
-	$promoter = substr( $Sequence, 6 + $Offset,  24);
-	$gRNA  = substr( $Sequence, 30 + $Offset, 20 );
-	$tracr = substr( $Sequence, 50 + $Offset);
+	my $promoter = substr( $Sequence, 6 + $Offset,  24);
+	my $gRNA  = substr( $Sequence, 30 + $Offset, 20 );
+	my $tracr = substr( $Sequence, 50 + $Offset);
 
 	#Check if the promoter is intact
 	if($promoter eq 'CCCTATCAGTGATAGAGACTCGAG') {
