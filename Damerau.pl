@@ -24,9 +24,9 @@ sub DetermineDamerauLevenshteinDistance ($$$) {
 			$d[$Row][$Column] = $d[$Row][$Column-1]+1;
 			$d[$Row][$Column] = ($d[$Row-1][$Column]+1) if (($d[$Row-1][$Column]+1) < $d[$Row][$Column]);
 			$d[$Row][$Column] = ($d[$Row-1][$Column-1] + $cost) if (($d[$Row-1][$Column-1] + $cost) < $d[$Row][$Column]);
-
+			#print sprintf("%02.0d",$d[$Row][$Column]) . " ";
 		}
-		
+		#print "\n";
 	}
 
  	#Read back mutations
