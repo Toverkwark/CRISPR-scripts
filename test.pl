@@ -1,14 +1,18 @@
 #!/bin/perl
-require "Damerau.pl";
-$A="TTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTTGAATTCC";
-$B="GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTTGAATTC";
-my %DamerauResults;
-DetermineDamerauLevenshteinDistance($B,$A,\%DamerauResults);
-print "AccuratelyDetermined:" . $DamerauResults{'AccuratelyDetermined'} . "\n";
-print "Distance:" . $DamerauResults{'Distance'} . "\n";
-
-foreach my $Change (keys $DamerauResults{'Changes'}) {
-	$LeadingErrors{$Change}->{$DamerauResults{'Changes'}->{$Change}}++;
-	print $DamerauResults{'Changes'}->{$Change} . " @" . $Change . " - ";
+use threads;
+$numberofjobs=64;
+for ($i=1;$i<=$numberofjobs;$i++) {
+	print "i=$i\n";
+	$thr[$i]=threads->create('doewat',$i);
 }
-print "\n";
+for ($i=1;$i<=$numberofjobs;$i++) {
+	$thr[$i]->join();
+}
+
+sub doewat($) {
+	my ($k)=@_;
+	print "Starting job $k\n";
+	for ($i=0;$i<100000000;$i++) {
+	}
+	print "Done with job $k\n";
+}

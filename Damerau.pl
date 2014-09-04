@@ -82,8 +82,7 @@ sub DetermineDamerauLevenshteinDistance ($$$) {
  	while ($Column>0) {
  		$$ReturnHash{'Changes'}->{$Row}="Insertion";				
  		$Column--
- 	} 
- 	
+ 	} 	
  	$$ReturnHash{'Distance'}=$Distance;
 }
 1;
