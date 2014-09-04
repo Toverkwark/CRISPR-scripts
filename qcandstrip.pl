@@ -78,7 +78,6 @@ while ( defined( my $line = <INPUT> ) ) {
 	my $Sequence = $line2;
 	my $Qualities = $line4;
 	#Get the barcode. See if it exists. If not, try to map it with maximally 1 nucleotide replacement and only 1 match existing.
-	#if that can be found, make sure to also write the output file sequences with the mapped barcode
 	my $Barcode = substr( $Sequence, $BarcodeOffset, $BarcodeLength );
 	if ( grep( /$Barcode/, @Barcodes ) ) {
 		$BarcodeFound=1;
@@ -91,12 +90,13 @@ while ( defined( my $line = <INPUT> ) ) {
 			$Barcode = $MatchedBarcode;
 			$BarcodeFound=1;
 			$Results{$Barcode}->[0]++;
-			#Change the barcode in the outputfile to the one it was matched to
-			$line2 = substr($Sequence,0,$BarcodeOffset) . $Barcode . substr($Sequence,$BarcodeLength+$BarcodeOffset,length($Sequence-$BarcodeOffset)-$BarcodeLength);
 		}
 	}
 
+	#Only continue to analyze this read if a valid barcode has been found
 	if($BarcodeFound) {
+		
+		#Store the quality information of this read in a per barcode manner
 		my $CharNumber=0;
 		foreach my $Char (split //, $Qualities) {
  			$QualitiesByBarcode{$Barcode}->{$CharNumber} += ord($Char) unless ord($Char)==10;
@@ -111,17 +111,16 @@ while ( defined( my $line = <INPUT> ) ) {
 		if ( substr( $Sequence, ($BarcodeLength+$BarcodeOffset), length($ExpectedLeadingSequence)) eq $ExpectedLeadingSequence ) {
 			$Results{$Barcode}->[2]++; #Leading sequences found
 			$Results{$Barcode}->[3]++; #Exact leading sequences found
-			#print "Exact leading sequence found\n";
 			$LeadingSequenceFound=1;
 		}
 		else {
 			$NotConvergedOffset=1;
 			while ($NotConvergedOffset) {
 				undef %DamerauResults;
-				DetermineDamerauLevenshteinDistance($ExpectedLeadingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$LeadingOffset)),\%DamerauResults);
+				#DetermineDamerauLevenshteinDistance($ExpectedLeadingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$LeadingOffset)),\%DamerauResults);
 				if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdLeading) {
 					$NotConvergedOffset=0;
-					#Record the errors found in the Leading sequence
+					#Test if there is an insertion or deletion at the end of the leader sequence, which would indicate we need to analyze again +1 or -1, respectively
 					foreach my $Change (keys $DamerauResults{'Changes'}) {
 						if($Change==(length($ExpectedLeadingSequence)+$LeadingOffset)) {
 							if($DamerauResults{'Changes'}->{$Change} eq 'Insertion') {
@@ -144,14 +143,11 @@ while ( defined( my $line = <INPUT> ) ) {
 		if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdLeading) {
 			$LeadingSequenceFound=1;
 			$Results{$Barcode}->[2]++; #Leading sequences found
-			#print "Leading sequence found with changes:";
+			#Store errors in leader sequence
 			foreach my $Change (keys $DamerauResults{'Changes'}) {
 				$LeadingErrors{$Change}->{$DamerauResults{'Changes'}->{$Change}}++;
-				#print $DamerauResults{'Changes'}->{$Change} . " @" . $Change . " - ";
 			}
-			#print "\n";
 		} 
-		#print "No leading sequence found\n" if !$LeadingSequenceFound;
 		
 		#Try to find the trailing sequence and record any mistakes there. Determine an offset in case it is found
 		my $InsertLength=$ExpectedInsertLength;
@@ -159,7 +155,6 @@ while ( defined( my $line = <INPUT> ) ) {
 		$NotConvergedOffset=1;
 		while ($NotConvergedOffset) {
 			undef %DamerauResults;
-			#print "Comparing:\n1:$ExpectedTrailingSequence\n2:" . substr( $Sequence, ($BarcodeLength+$BarcodeOffset+$LeadingOffset+$InsertLength+length($ExpectedLeadingSequence)), length($ExpectedTrailingSequence)) . "\n";
 			if ( substr( $Sequence, ($BarcodeLength+$BarcodeOffset+$LeadingOffset+$InsertLength+length($ExpectedLeadingSequence)), length($ExpectedTrailingSequence)) eq $ExpectedTrailingSequence ) {
 				$Results{$Barcode}->[4]++; #Trailing sequences found
 				$Results{$Barcode}->[5]++; #Exact trailing sequences found
@@ -168,10 +163,10 @@ while ( defined( my $line = <INPUT> ) ) {
 				$NotConvergedOffset=0;	
 			}
 			else {
-				DetermineDamerauLevenshteinDistance($ExpectedTrailingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset+$LeadingOffset+$InsertLength+length($ExpectedLeadingSequence)), length($ExpectedTrailingSequence)),\%DamerauResults);
+				#DetermineDamerauLevenshteinDistance($ExpectedTrailingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset+$LeadingOffset+$InsertLength+length($ExpectedLeadingSequence)), length($ExpectedTrailingSequence)),\%DamerauResults);
 				if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdTrailing) {
 					$NotConvergedOffset=0;
-					#Record the errors found in the Trailing sequence
+					#Test if there is an insertion or deletion at the end of the leader sequence, which would indicate we need to analyze again +1 or -1, respectively
 					foreach my $Change (keys $DamerauResults{'Changes'}) {
 						if($Change==0 && $DamerauResults{'Changes'}->{$Change} eq 'Insertion') {
 							$InsertLength++;
@@ -192,23 +187,18 @@ while ( defined( my $line = <INPUT> ) ) {
 		if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdTrailing) {
 			$TrailingSequenceFound=1;
 			$Results{$Barcode}->[4]++; #Trailing sequences found
-			#print "Trailing sequence found with changes:";
+			#Store errors in trailing sequence
 			foreach my $Change (keys $DamerauResults{'Changes'}) {
 				$TrailingErrors{$Change}->{$DamerauResults{'Changes'}->{$Change}}++;
-				#print $DamerauResults{'Changes'}->{$Change} . " @" . $Change . " - ";
 			}
-			#print "\n";
 		} 
-		#print "No trailing sequence found. LeadingOffset:$LeadingOffset ExpectedInsertLength:$ExpectedInsertLength \n" if !$TrailingSequenceFound;
-		#print "Insert length:$InsertLength\n";
 		
 		#Only continue if in any way a leading and trailing sequence are found
 		if($LeadingSequenceFound && $TrailingSequenceFound) {
 			$InsertLengths{$InsertLength}++;
 			$Results{$Barcode}->[6]++;
 			if($InsertLength==$ExpectedInsertLength) {
-				$Results{$Barcode}->[7]++;
-				
+				$Results{$Barcode}->[7]++;			
 #				my $LeadingSequence=substr( $Sequence, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$LeadingOffset));
 #				my $LeadingQualities=substr( $Qualities, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$LeadingOffset));
 				my $InsertSequence=substr($Sequence,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)),$InsertLength);
@@ -219,13 +209,10 @@ while ( defined( my $line = <INPUT> ) ) {
 #				print color("green") . $InsertSequence;
 #				print color("blue") . $TrailingSequence;
 #				print color("reset") . "\n";
-#				print "$InsertSequence\n";
 				if($Library{$InsertSequence}) {
 					$Results{$Barcode}->[8]++;
 					$InsertCounts{$InsertSequence}->{$Barcode}++;
-#					print "Insert counts for " . $InsertSequence . " now " . $InsertCounts{$InsertSequence}->{$Barcode} . "\n";
 				}
-				#print OUTPUT "$Barcode\t$InsertSequence\n";
 			}
 		}
 		else {
@@ -234,7 +221,8 @@ while ( defined( my $line = <INPUT> ) ) {
 	}		
 }
 
-#Output the tracrRNA positional histogram to the report file
+#Output the insert size distribution
+print "Writing insert size distribution to report\n";
 print REPORT "Insert sizes\n";
 foreach my $InsertLength (sort {$a <=> $b} keys %InsertLengths) {
 	print REPORT "Size\t" . ($InsertLength) . "\t" . $InsertLengths{$InsertLength} . "\n";
@@ -242,6 +230,7 @@ foreach my $InsertLength (sort {$a <=> $b} keys %InsertLengths) {
 print REPORT "\n";
 
 #Output the leading error information
+print "Writing leading error information to report\n";
 print REPORT "Leading errors\nPosition\tInsertions\tDeletions\tMutations\n";
 foreach my $Position (sort {$a <=> $b} keys %LeadingErrors) {
 	my $TotalErrors=0;
@@ -256,6 +245,7 @@ foreach my $Position (sort {$a <=> $b} keys %LeadingErrors) {
 print REPORT "\n";
 
 #Output the trailing error information
+print "Writing trailing error information to report\n";
 print REPORT "Trailing errors\nPosition\tInsertions\tDeletions\tMutations\n";
 foreach my $Position (sort {$a <=> $b} keys %TrailingErrors) {
 	my $TotalErrors=0;
@@ -270,6 +260,7 @@ foreach my $Position (sort {$a <=> $b} keys %TrailingErrors) {
 print REPORT "\n";
 
 #Print report of read filtering per barcode
+print "Writing filtering steps per barcode\n";
 my @Totals;
 print REPORT "Barcode\tBarcodes Found\tPerfect Barcodes Found\tLeader found\tPerfect leaders found\tTrailers found\tPerfect trailers found\tLeader and trailes found\tCorrect insert length\tInserts in library\n";
 foreach my $Barcode ( @Barcodes ) {
@@ -301,6 +292,7 @@ print REPORT sprintf(
 print REPORT "\n\nAnalyzed reads\t" . sprintf( "%i", $RecordsAnalyzed ) . "\n\n";
 
 #Print quality information
+print "Writing quality information to report\n";
 print REPORT "Quality Information\n";
 foreach my $Barcode ( @Barcodes ) {
 	print REPORT "$Barcode\t";
@@ -311,6 +303,7 @@ foreach my $Barcode ( @Barcodes ) {
 }
 
 #Output the read counts of library hits
+print "Writing filtered library insert counts\n";
 print OUTPUT "LibraryID\tSequence";
 foreach my $Barcode (@Barcodes) {
 	print OUTPUT "\t$Barcode";
