@@ -5,7 +5,7 @@ require "Damerau.pl";
 sub MatchBarcode($@);
 sub ScoreTwoStrings($$);
 
-print "Usage:perl $0 -input -output -report\n-input\tName of input file\n-output\tName of output file. Default is inputfile.stripped\n-report\tName of report file. Default is inputfile.report\n";
+print "Usage:perl $0 -input -output -report -library\n-input\tName of input file\n-output\tName of output file. Default is inputfile.stripped\n-report\tName of report file. Default is inputfile.report\n-library\tName of library file to which inserts are mapped\n";
 
 my $StartTime=time;
 
@@ -23,15 +23,18 @@ my %LeadingErrors;
 my %TrailingErrors;
 my %InsertLengths;
 my %QualitiesByBarcode;
+my %InsertCounts;
 my $InputFile;
 my $OutputFile;
 my $ReportFile;
+my $LibraryFile;
 my $RecordsAnalyzed;
 
 GetOptions(
 	"input=s"  => \$InputFile,
 	"output=s" => \$OutputFile,
 	"report=s" => \$ReportFile,
+	"library=s" => \$LibraryFile
 );
 
 if ( !$OutputFile ) {
@@ -46,6 +49,21 @@ open( INPUT, $InputFile ) or die "ERROR in $0:Input file $InputFile is not acces
 open( OUTPUT, ">", $OutputFile ) or die "ERROR in $0:Output file $OutputFile is not accessible.\n";
 open( REPORT, ">", $ReportFile ) or die "ERROR in $0:Report file $ReportFile is not accessible.\n";
 open( NOTANALYZED, ">", $InputFile . ".notanalyzed") or die "ERROR in $0:File " . $InputFile . ".analyzed is not accessible.\n";
+open( LIBRARY, $LibraryFile ) or die "ERROR in $0:Library file $LibraryFile is not accessible.\n";
+
+#Start by reading in the library file
+#The format of this file should be [ID] tab [SEQUENCE]
+print "Reading library file\n";
+my %Library;
+my $InsertsFound;
+while ( defined( my $Line = <LIBRARY> ) ) {
+	$InsertsFound++;
+	chomp($Line);
+	my @values = split( /\t/, $Line );
+	$Library{$values[1]} = $values[0];
+}
+close(LIBRARY) or die "Could not close file $LibraryFile\n";
+print "$InsertsFound inserts found in library file $LibraryFile\n";
 
 while ( defined( my $line = <INPUT> ) ) {
 	my $BarcodeFound;
@@ -190,18 +208,24 @@ while ( defined( my $line = <INPUT> ) ) {
 			$Results{$Barcode}->[6]++;
 			if($InsertLength==$ExpectedInsertLength) {
 				$Results{$Barcode}->[7]++;
-				my $LeadingSequence=substr( $Sequence, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$LeadingOffset));
+				
+#				my $LeadingSequence=substr( $Sequence, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$LeadingOffset));
 #				my $LeadingQualities=substr( $Qualities, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$LeadingOffset));
 				my $InsertSequence=substr($Sequence,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)),$InsertLength);
 #				my $InsertQualities=substr($Qualities,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)),$InsertLength);
-				my $TrailingSequence=substr($Sequence,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)+$InsertLength));
+#				my $TrailingSequence=substr($Sequence,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)+$InsertLength));
 #				my $TrailingQualities=substr($Qualities,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)+$InsertLength));
 #				print color("red") . $LeadingSequence;
 #				print color("green") . $InsertSequence;
 #				print color("blue") . $TrailingSequence;
 #				print color("reset") . "\n";
-
-				print OUTPUT "$Barcode\t$InsertSequence\n";
+#				print "$InsertSequence\n";
+				if($Library{$InsertSequence}) {
+					$Results{$Barcode}->[8]++;
+					$InsertCounts{$InsertSequence}->{$Barcode}++;
+#					print "Insert counts for " . $InsertSequence . " now " . $InsertCounts{$InsertSequence}->{$Barcode} . "\n";
+				}
+				#print OUTPUT "$Barcode\t$InsertSequence\n";
 			}
 		}
 		else {
@@ -247,24 +271,24 @@ print REPORT "\n";
 
 #Print report of read filtering per barcode
 my @Totals;
-print REPORT "Barcode\tBarcodes Found\tPerfect Barcodes Found\tLeader found\tPerfect leaders found\tTrailers found\tPerfect trailers found\tLeader and trailes found\tCorrect insert length\n";
+print REPORT "Barcode\tBarcodes Found\tPerfect Barcodes Found\tLeader found\tPerfect leaders found\tTrailers found\tPerfect trailers found\tLeader and trailes found\tCorrect insert length\tInserts in library\n";
 foreach my $Barcode ( @Barcodes ) {
 	print REPORT "$Barcode\t";
-	for ( my $counter = 0 ; $counter <= 7 ; $counter++ ) {
+	for ( my $counter = 0 ; $counter <= 8 ; $counter++ ) {
 		print REPORT sprintf( "%i", $Results{$Barcode}->[$counter] ) . "\t";
 		$Totals[$counter] += $Results{$Barcode}->[$counter];
 	}
 	if ( $Results{$Barcode}->[0] > 0 ) {
-		print REPORT sprintf( "%4.2f%%", 100 * ( $Results{$Barcode}->[7] / $Results{$Barcode}->[0] ) ) . "\n";
+		print REPORT sprintf( "%4.2f%%", 100 * ( $Results{$Barcode}->[8] / $Results{$Barcode}->[0] ) ) . "\n";
 	}
 	else {
 		print REPORT sprintf( "%4.2f%%", 0 ) . "\n";
 	}
 }
-print REPORT sprintf( "TOTAL\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i", $Totals[0], $Totals[1], $Totals[2], $Totals[3], $Totals[4], $Totals[5], $Totals[6], $Totals[7]);
+print REPORT sprintf( "TOTAL\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i", $Totals[0], $Totals[1], $Totals[2], $Totals[3], $Totals[4], $Totals[5], $Totals[6], $Totals[7], $Totals[8]);
 
 print REPORT sprintf(
-	"\n\t\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%",
+	"\n\t\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%",
 	100 * $Totals[1] / $Totals[0],
 	100 * $Totals[2] / $Totals[0],
 	100 * $Totals[3] / $Totals[0],
@@ -272,6 +296,7 @@ print REPORT sprintf(
 	100 * $Totals[5] / $Totals[0],
 	100 * $Totals[6] / $Totals[0],
 	100 * $Totals[7] / $Totals[0],
+	100 * $Totals[8] / $Totals[0],
 );
 print REPORT "\n\nAnalyzed reads\t" . sprintf( "%i", $RecordsAnalyzed ) . "\n\n";
 
@@ -283,6 +308,25 @@ foreach my $Barcode ( @Barcodes ) {
 		print REPORT sprintf("%4.2f", $QualitiesByBarcode{$Barcode}->{$CharNumber} / $Results{$Barcode}->[0]) . "\t";
 	}
 	print REPORT "\n";
+}
+
+#Output the read counts of library hits
+print OUTPUT "LibraryID\tSequence";
+foreach my $Barcode (@Barcodes) {
+	print OUTPUT "\t$Barcode";
+}
+print OUTPUT "\n";
+foreach my $InsertSequence (sort {$Library{$a} cmp $Library{$b}} keys %Library) {
+	print OUTPUT $Library{$InsertSequence} . "\t" . $InsertSequence;
+	foreach my $Barcode (@Barcodes) {
+		if($InsertCounts{$InsertSequence}->{$Barcode}) {
+			print OUTPUT "\t" . $InsertCounts{$InsertSequence}->{$Barcode};	
+		}
+		else {
+			print OUTPUT "\t0";
+		}
+	}
+	print OUTPUT "\n";
 }
 
 close(INPUT)  or die "Could not close input file $InputFile.\n";
