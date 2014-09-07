@@ -1,11 +1,13 @@
 use Getopt::Long;
 use Term::ANSIColor;
 use strict;
-use threads;
+#use threads;
+#use threads::shared;
+use Parallel::ForkManager;
 require "Damerau.pl";
 sub MatchBarcode($@);
 sub ScoreTwoStrings($$);
-sub ProcessRead($$);
+sub ProcessReads($);
 
 print "Usage:perl $0 -input -output -report -library\n-input\tName of input file\n-output\tName of output file. Default is inputfile.stripped\n-report\tName of report file. Default is inputfile.report\n-library\tName of library file to which inserts are mapped\n";
 
@@ -20,19 +22,20 @@ my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence t
 my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTTGAATTC"; #Sequence that is expected to come after the gRNA/shRNA sequence
 my $ErrorThresholdLeading = 20; #This number of mutations or indels can be present in the leading  sequences
 my $ErrorThresholdTrailing = 20; #This number of mutations or indels can be present in the trailing sequences
-my @Barcodes = qw(CGTGAT ACATCG GCCTAA TGGTCA CACTGT ATTGGC GATCTG TCAAGT CTGATC AAGCTA GTAGCC TACAAG);
-my %Results :shared;
-my %LeadingErrors :shared;
-my %TrailingErrors :shared;
-my %InsertLengths :shared;
-my %QualitiesByBarcode :shared;
-my %InsertCounts :shared;
+my @Barcodes :shared;
+@Barcodes = qw(CGTGAT ACATCG GCCTAA TGGTCA CACTGT ATTGGC GATCTG TCAAGT CTGATC AAGCTA GTAGCC TACAAG);
+my %Results;
+my %LeadingErrors;
+my %TrailingErrors;
+my %InsertLengths;
+my %QualitiesByBarcode;
+my %InsertCounts;
 my $InputFile;
 my $OutputFile;
 my $ReportFile;
 my $LibraryFile;
 my $RecordsAnalyzed;
-my $NotAnalyzed :shared;
+my $NotAnalyzed;
 
 GetOptions(
 	"input=s"  => \$InputFile,
@@ -49,7 +52,6 @@ if ( !$ReportFile ) {
 	$ReportFile = $InputFile . ".report";
 }
 
-open( INPUT, $InputFile ) or die "ERROR in $0:Input file $InputFile is not accessible.\n";
 open( OUTPUT, ">", $OutputFile ) or die "ERROR in $0:Output file $OutputFile is not accessible.\n";
 open( REPORT, ">", $ReportFile ) or die "ERROR in $0:Report file $ReportFile is not accessible.\n";
 open( NOTANALYZED, ">", $InputFile . ".notanalyzed") or die "ERROR in $0:File " . $InputFile . ".analyzed is not accessible.\n";
@@ -69,44 +71,13 @@ while ( defined( my $Line = <LIBRARY> ) ) {
 close(LIBRARY) or die "Could not close file $LibraryFile\n";
 print "$InsertsFound inserts found in library file $LibraryFile\n";
 
-#Loop through all reads in the sequence file
-my @Threads;
-my @RunningThreads;
-while ( defined( my $line = <INPUT> ) ) {
-	$RecordsAnalyzed++;
-	if ( !( $RecordsAnalyzed % 100 ) ) {
-		print "Analyzing record $RecordsAnalyzed\n";
-	}
-	my $Sequence    = <INPUT>;
-	my $line3    = <INPUT>;
-	my $Qualities    = <INPUT>;
-	chomp($Sequence);
-	chomp($Qualities);
-#	@RunningThreads=threads->list;
-#	#If there's not a thread free, wait until there is one
-#	print "Number of threads running:" . (scalar @RunningThreads) . "\n";
-#	if ((scalar @RunningThreads) < $NumberOfThreads) {
-#		my $Thread=threads->create(\&ProcessRead,$Sequence,$Qualities);
-#		print "Started thread " . $Thread->tid() . "\n";
-#		push(@Threads,$Thread);
-#	}
-#	else {
-#		while ((scalar @RunningThreads) >= $NumberOfThreads) {
-#			foreach my $Thread (@Threads) {
-#				if($Thread->is_joinable()) {
-#					print "Ending thread " . $Thread->tid() . "\n";
-#					$Thread->join();
-#					last;
-#				}
-#			}
-#			@RunningThreads=threads->list;
-#		}
-#		my $Thread=threads->create(\&ProcessRead,$Sequence,$Qualities);
-#		print "Started thread " . $Thread->tid() . "\n";
-#		push(@Threads,$Thread);
-#	}	
-	ProcessRead($Sequence,$Qualities);
-}
+#my $ProcessManager=new Parallel::ForkManager(2);
+#for(my$i=1;$i<=2;$i++) {
+#	my $ProcessID=$ProcessManager->start and next;
+	ProcessReads("small.1");
+#	$ProcessManager->finish;
+#}
+#$ProcessManager->wait_all_children;
 
 #Write all the not analyzed data
 print NOTANALYZED $NotAnalyzed;
@@ -212,7 +183,6 @@ foreach my $InsertSequence (sort {$Library{$a} cmp $Library{$b}} keys %Library) 
 	print OUTPUT "\n";
 }
 
-close(INPUT)  or die "Could not close input file $InputFile.\n";
 close(OUTPUT) or die "Could not close output file $OutputFile.\n";
 close(REPORT) or die "Could not close report file $ReportFile.\n";
 close(NOTANALYZED) or die "Could not close file $InputFile.notanalyzed\n";
@@ -249,8 +219,10 @@ sub ScoreTwoStrings($$) {
 	return $Deviations;
 }
 
-sub ProcessRead($$) {
-	my ($Sequence, $Qualities) = @_;
+
+
+sub ProcessReads($) {
+	my ($InputFile) = @_;
 	my $BarcodeFound=0;
 	my $BarcodeFoundExact=0;
 	my $LeadingSequenceFound=0;
@@ -262,154 +234,167 @@ sub ProcessRead($$) {
 	my $InsertInLibrary=0;
 	my $InsertSequence;
 
-	#Get the barcode. See if it exists. If not, try to map it with maximally 1 nucleotide replacement and only 1 match existing.
-	my $Barcode = substr( $Sequence, $BarcodeOffset, $BarcodeLength );
-	if ( grep( /$Barcode/, @Barcodes ) ) {
-		$BarcodeFound=1;
-		$BarcodeFoundExact=1;
-	}
-	else {
-		my $MatchedBarcode = MatchBarcode( $Barcode, @Barcodes );
-		if ($MatchedBarcode) {
-			$Barcode = $MatchedBarcode;
+	open( INPUT, $InputFile ) or die "ERROR in $0:Input file $InputFile is not accessible.\n";
+	
+	while ( defined( my $line = <INPUT> ) ) {
+		$RecordsAnalyzed++;
+		if ( !( $RecordsAnalyzed % 100 ) ) {
+			print "Analyzing record $RecordsAnalyzed of inputfile $InputFile\n";
+		}
+		my $Sequence = <INPUT>;
+		my $line3 = <INPUT>;
+		my $Qualities = <INPUT>;
+		chomp($Sequence);
+		chomp($Qualities);
+		#Get the barcode. See if it exists. If not, try to map it with maximally 1 nucleotide replacement and only 1 match existing.
+		my $Barcode = substr( $Sequence, $BarcodeOffset, $BarcodeLength );
+		if ( grep( /$Barcode/, @Barcodes ) ) {
 			$BarcodeFound=1;
-			$Results{$Barcode}->[0]++;
-		}
-	}
-
-	#Only continue to analyze this read if a valid barcode has been found
-	if($BarcodeFound) {	
-		#Try to find the leading sequence and record any mistakes there. Determine an offset in case it is found		
-		my $LeadingOffset = 0;
-		my %DamerauResults;
-		my $NotConvergedOffset=1;
-		if ( substr( $Sequence, ($BarcodeLength+$BarcodeOffset), length($ExpectedLeadingSequence)) eq $ExpectedLeadingSequence ) {
-			$LeadingSequenceFound=1;
-			$LeadingSequenceFoundExact=1;
-		}
+			$BarcodeFoundExact=1;
+		}	
 		else {
+			my $MatchedBarcode = MatchBarcode( $Barcode, @Barcodes );
+			if ($MatchedBarcode) {
+				$Barcode = $MatchedBarcode;
+				$BarcodeFound=1;
+			}
+		}
+
+		#Only continue to analyze this read if a valid barcode has been found
+		if($BarcodeFound) {	
+			#Try to find the leading sequence and record any mistakes there. Determine an offset in case it is found		
+			my $LeadingOffset = 0;
+			my %DamerauResults;
+			my $NotConvergedOffset=1;
+			if ( substr( $Sequence, ($BarcodeLength+$BarcodeOffset), length($ExpectedLeadingSequence)) eq $ExpectedLeadingSequence ) {
+				$LeadingSequenceFound=1;
+				$LeadingSequenceFoundExact=1;
+			}
+			else {
+				$NotConvergedOffset=1;
+				while ($NotConvergedOffset) {
+					undef %DamerauResults;
+					DetermineDamerauLevenshteinDistance($ExpectedLeadingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$LeadingOffset)),\%DamerauResults);
+					if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdLeading) {
+						$NotConvergedOffset=0;
+						#Test if there is an insertion or deletion at the end of the leader sequence, which would indicate we need to analyze again +1 or -1, respectively
+						foreach my $Change (keys $DamerauResults{'Changes'}) {
+							if($Change==(length($ExpectedLeadingSequence)+$LeadingOffset)) {
+								if($DamerauResults{'Changes'}->{$Change} eq 'Insertion') {
+									$LeadingOffset++;
+									$NotConvergedOffset=1;
+								}
+								if($DamerauResults{'Changes'}->{$Change} eq 'Deletion') {
+									$LeadingOffset--;
+									$NotConvergedOffset=1;
+								}
+							}
+						}
+					}
+					else {
+						$NotConvergedOffset=0;		
+					}
+				}		
+			}
+			
+			if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdLeading) {
+				$LeadingSequenceFound=1;
+				#Store errors in leader sequence
+				foreach my $Change (keys $DamerauResults{'Changes'}) {
+					lock(%LeadingErrors);
+					$LeadingErrors{$Change}->{$DamerauResults{'Changes'}->{$Change}}++;
+				}
+			} 
+			
+			#Try to find the trailing sequence and record any mistakes there. Determine an offset in case it is found
+			my $InsertLength=$ExpectedInsertLength;
 			$NotConvergedOffset=1;
 			while ($NotConvergedOffset) {
 				undef %DamerauResults;
-				DetermineDamerauLevenshteinDistance($ExpectedLeadingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$LeadingOffset)),\%DamerauResults);
-				if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdLeading) {
-					$NotConvergedOffset=0;
-					#Test if there is an insertion or deletion at the end of the leader sequence, which would indicate we need to analyze again +1 or -1, respectively
-					foreach my $Change (keys $DamerauResults{'Changes'}) {
-						if($Change==(length($ExpectedLeadingSequence)+$LeadingOffset)) {
-							if($DamerauResults{'Changes'}->{$Change} eq 'Insertion') {
-								$LeadingOffset++;
+				if ( substr( $Sequence, ($BarcodeLength+$BarcodeOffset+$LeadingOffset+$InsertLength+length($ExpectedLeadingSequence)), length($ExpectedTrailingSequence)) eq $ExpectedTrailingSequence ) {
+					$TrailingSequenceFound=1;
+					$TrailingSequenceFoundExact=1;
+					$NotConvergedOffset=0;	
+				}
+				else {
+					DetermineDamerauLevenshteinDistance($ExpectedTrailingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset+$LeadingOffset+$InsertLength+length($ExpectedLeadingSequence)), length($ExpectedTrailingSequence)),\%DamerauResults);
+					if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdTrailing) {
+						$NotConvergedOffset=0;
+						#Test if there is an insertion or deletion at the end of the leader sequence, which would indicate we need to analyze again +1 or -1, respectively
+						foreach my $Change (keys $DamerauResults{'Changes'}) {
+							if($Change==0 && $DamerauResults{'Changes'}->{$Change} eq 'Insertion') {
+								$InsertLength++;
 								$NotConvergedOffset=1;
 							}
-							if($DamerauResults{'Changes'}->{$Change} eq 'Deletion') {
-								$LeadingOffset--;
+							if($Change==1 && $DamerauResults{'Changes'}->{$Change} eq 'Deletion') {
+								$InsertLength--;
 								$NotConvergedOffset=1;
 							}
 						}
 					}
-				}
-				else {
-					$NotConvergedOffset=0;		
-				}
-			}		
-		}
-		
-		if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdLeading) {
-			$LeadingSequenceFound=1;
-			#Store errors in leader sequence
-			foreach my $Change (keys $DamerauResults{'Changes'}) {
-				lock(%LeadingErrors);
-				$LeadingErrors{$Change}->{$DamerauResults{'Changes'}->{$Change}}++;
+					else {
+						$NotConvergedOffset=0;		
+					}
+				}		
 			}
-		} 
-		
-		#Try to find the trailing sequence and record any mistakes there. Determine an offset in case it is found
-		my $InsertLength=$ExpectedInsertLength;
-		$NotConvergedOffset=1;
-		while ($NotConvergedOffset) {
-			undef %DamerauResults;
-			if ( substr( $Sequence, ($BarcodeLength+$BarcodeOffset+$LeadingOffset+$InsertLength+length($ExpectedLeadingSequence)), length($ExpectedTrailingSequence)) eq $ExpectedTrailingSequence ) {
+			
+			if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdTrailing) {
 				$TrailingSequenceFound=1;
-				$TrailingSequenceFoundExact=1;
-				$NotConvergedOffset=0;	
+				#Store errors in trailing sequence
+				foreach my $Change (keys $DamerauResults{'Changes'}) {
+					lock(%TrailingErrors);
+					$TrailingErrors{$Change}->{$DamerauResults{'Changes'}->{$Change}}++;
+				}
+			} 
+			
+			#Only continue if in any way a leading and trailing sequence are found
+			if($LeadingSequenceFound && $TrailingSequenceFound) {
+				lock(%InsertLengths);
+				$InsertLengths{$InsertLength}++;
+				$LeadingAndTrailingFound=1;
+				if($InsertLength==$ExpectedInsertLength) {
+					$InsertCorrectLength=1;			
+					$InsertSequence=substr($Sequence,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)),$InsertLength);
+				}
 			}
+		}
+		if ($BarcodeFound) {
+			lock(%Results);
+			$Results{$Barcode}->[0]++;
+			$Results{$Barcode}->[1]++ if ($BarcodeFoundExact);
+			
+			#Store the quality information of this read in a per barcode manner
+			my $CharNumber=0;
+			lock (%QualitiesByBarcode);
+			foreach my $Char (split //, $Qualities) {
+ 				$QualitiesByBarcode{$Barcode}->{$CharNumber} += ord($Char) unless ord($Char)==10;
+ 				$CharNumber++;
+ 			}
+ 			if ($LeadingSequenceFound) {
+ 				$Results{$Barcode}->[2]++;
+ 				$Results{$Barcode}->[3]++ if ($LeadingSequenceFoundExact);	
+ 			} 
+ 			if ($TrailingSequenceFound) {
+ 				$Results{$Barcode}->[4]++;
+ 				$Results{$Barcode}->[5]++ if ($TrailingSequenceFoundExact);
+ 			}
+ 			if ($LeadingAndTrailingFound){
+ 				$Results{$Barcode}->[6]++;
+ 				if ($InsertCorrectLength) {
+ 					$Results{$Barcode}->[7]++;
+ 					if($Library{$InsertSequence}) {
+						$Results{$Barcode}->[8]++;
+						lock(%InsertCounts);
+						$InsertCounts{$InsertSequence}->{$Barcode}++;
+					}	 
+ 				}
+ 			}
 			else {
-				DetermineDamerauLevenshteinDistance($ExpectedTrailingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset+$LeadingOffset+$InsertLength+length($ExpectedLeadingSequence)), length($ExpectedTrailingSequence)),\%DamerauResults);
-				if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdTrailing) {
-					$NotConvergedOffset=0;
-					#Test if there is an insertion or deletion at the end of the leader sequence, which would indicate we need to analyze again +1 or -1, respectively
-					foreach my $Change (keys $DamerauResults{'Changes'}) {
-						if($Change==0 && $DamerauResults{'Changes'}->{$Change} eq 'Insertion') {
-							$InsertLength++;
-							$NotConvergedOffset=1;
-						}
-						if($Change==1 && $DamerauResults{'Changes'}->{$Change} eq 'Deletion') {
-							$InsertLength--;
-							$NotConvergedOffset=1;
-						}
-					}
-				}
-				else {
-					$NotConvergedOffset=0;		
-				}
-			}		
-		}
-		
-		if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdTrailing) {
-			$TrailingSequenceFound=1;
-			#Store errors in trailing sequence
-			foreach my $Change (keys $DamerauResults{'Changes'}) {
-				lock(%TrailingErrors);
-				$TrailingErrors{$Change}->{$DamerauResults{'Changes'}->{$Change}}++;
+				lock($NotAnalyzed);
+				$NotAnalyzed=$NotAnalyzed . "$Sequence\n";
 			}
-		} 
-		
-		#Only continue if in any way a leading and trailing sequence are found
-		if($LeadingSequenceFound && $TrailingSequenceFound) {
-			lock(%InsertLengths);
-			$InsertLengths{$InsertLength}++;
-			$LeadingAndTrailingFound=1;
-			if($InsertLength==$ExpectedInsertLength) {
-				$InsertCorrectLength=1;			
-				$InsertSequence=substr($Sequence,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)),$InsertLength);
-			}
-		}
+		}			
 	}
-	if ($BarcodeFound) {
-		lock(%Results);
-		$Results{$Barcode}->[0]++;
-		$Results{$Barcode}->[1]++ if ($BarcodeFoundExact);
-		
-		#Store the quality information of this read in a per barcode manner
-		my $CharNumber=0;
-		lock (%QualitiesByBarcode);
-		foreach my $Char (split //, $Qualities) {
- 			$QualitiesByBarcode{$Barcode}->{$CharNumber} += ord($Char) unless ord($Char)==10;
- 			$CharNumber++;
- 		}
- 		if ($LeadingSequenceFound) {
- 			$Results{$Barcode}->[2]++;
- 			$Results{$Barcode}->[3]++ if ($LeadingSequenceFoundExact);	
- 		} 
- 		if ($TrailingSequenceFound) {
- 			$Results{$Barcode}->[4]++;
- 			$Results{$Barcode}->[5]++ if ($TrailingSequenceFoundExact);
- 		}
- 		if ($LeadingAndTrailingFound){
- 			$Results{$Barcode}->[6]++;
- 			if ($InsertCorrectLength) {
- 				$Results{$Barcode}->[7]++;
- 				if($Library{$InsertSequence}) {
-					$Results{$Barcode}->[8]++;
-					lock(%InsertCounts);
-					$InsertCounts{$InsertSequence}->{$Barcode}++;
-				}	 
- 			};
- 		}
-		else {
-			lock($NotAnalyzed);
-			$NotAnalyzed=$NotAnalyzed . "$Sequence\n";
-		}
-	}		
-	return ();
+	close(INPUT)  or die "Could not close input file $InputFile.\n";
+	return();
 }
