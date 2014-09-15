@@ -1,9 +1,11 @@
 sub ProcessReads($$$$$$$$$) {
-	my ($InputFile,$BarcodeLength,$BarcodeOffset,$ExpectedInsertLength,$ExpectedLeadingSequence,$ExpectedTrailingSequence,$ErrorThresholdLeading,$ErrorThresholdTrailing,$Library) = @_;
+	my ($InputFile,$BarcodeLength,$BarcodeOffset,$ExpectedInsertLength,$ExpectedLeadingSequence,$ExpectedTrailingSequence,$ErrorThresholdLeading,$ErrorThresholdTrailing,$Library,@Barcodes) = @_;
 	my %LeadingErrors;
 	my %TrailingErrors;
 	my %InsertLengths;
+	my %InsertCounts;
 	my %QualitiesByBarcode;
+	my %Results;
 	my $BarcodeFound=0;
 	my $BarcodeFoundExact=0;
 	my $LeadingSequenceFound=0;
@@ -14,10 +16,9 @@ sub ProcessReads($$$$$$$$$) {
 	my $InsertCorrectLength=0;
 	my $InsertInLibrary=0;
 	my $InsertSequence;
-	my @Barcodes;
-	@Barcodes = qw(CGTGAT ACATCG GCCTAA TGGTCA CACTGT ATTGGC GATCTG TCAAGT CTGATC AAGCTA GTAGCC TACAAG);
-	
-
+	my $RecordsAnalyzed=0;
+	my $NotAnalyzed;
+		
 	open( INPUT, $InputFile ) or die "ERROR in $0:Input file $InputFile is not accessible.\n";
 	
 	while ( defined( my $line = <INPUT> ) ) {
@@ -183,6 +184,55 @@ sub ProcessReads($$$$$$$$$) {
 		}			
 	}
 	close(INPUT)  or die "Could not close input file $InputFile.\n";
+	
+	#Write tmp output to output file
+	open(OUTPUT, ">", ($InputFile . ".tmp")) or die ("Could not open outputfile " . ($InputFile . ".tmp") . "\n");
+	#Write Results
+	print OUTPUT "***RESULTS***\n";
+	foreach my $Barcode (keys %Results) {
+		foreach my $Entry (keys $Results{$Barcode}) {
+			print OUTPUT "$Barcode\t$Entry\t" . $Results{$Barcode}->[$Entry]  . "\n";
+		}
+	}
+	
+	print OUTPUT "***LEADING ERRORS***\n"; 
+	foreach my $Position (keys %LeadingErrors) {
+		foreach my $Change (keys $LeadingErrors{$Position}) {
+			print OUTPUT "$Position\t$Change\t" . $LeadingErrors{$Position}->{$Change} . "\n";
+		}
+	}
+	
+	print OUTPUT "***TRAILING ERRORS***\n"; 
+	foreach my $Position (keys %TrailingErrors) {
+		foreach my $Change (keys $TrailingErrors{$Position}) {
+			print OUTPUT "$Position\t$Change\t" . $TrailingErrors{$Position}->{$Change} . "\n";
+		}
+	}
+	
+	print OUTPUT "***INSERT LENGTHS***\n";
+	foreach my $Length(keys %InsertLengths) {
+		print OUTPUT "$Length\t" . $InsertLengths{$Length} . "\n";
+	}
+	
+	print OUTPUT "***INSERT COUNTS***\n";
+	foreach my $Sequence (keys %InsertCounts) {
+		foreach my $Barcode (keys $InsertCounts{$Sequence}) {
+			print OUTPUT "$Sequence\t$Barcode\t" . $InsertCounts{$Sequence}->{$Barcode} . "\n";
+		}
+	}
+	
+	print OUTPUT "***QUALITIES BY BARCODE***\n";
+	foreach my $Barcode (keys %QualitiesByBarcode) {
+		foreach my $CharNum (keys $QualitiesByBarcode{$Barcode}) {
+			print OUTPUT "$Barcode\t$CharNum\t" . $QualitiesByBarcode{$Barcode}->{$CharNum} . "\n";
+		}
+	}
+	
+	print OUTPUT "***RECORDS ANALYZED***\n";
+	print OUTPUT $RecordsAnalyzed . "\n";
+	print OUTPUT "***NOT ANALYZED***\n";
+	print OUTPUT $NotAnalyzed;
+	close(OUTPUT) or die "Could not close outputfile " . ($InputFile . ".tmp") . "\n";
 	return();
 }
 

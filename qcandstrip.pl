@@ -95,7 +95,7 @@ for (my $i=1;$i<=$NumberOfThreads;$i++) {
 my $ProcessManager=new Parallel::ForkManager($NumberOfThreads);
 for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
 	$ProcessManager->start and next;
-	ProcessReads($InputFile . "." . $Thread,$BarcodeLength,$BarcodeOffset,$ExpectedInsertLength,$ExpectedLeadingSequence,$ExpectedTrailingSequence,$ErrorThresholdLeading,$ErrorThresholdTrailing,\%Library);
+	ProcessReads($InputFile . "." . $Thread,$BarcodeLength,$BarcodeOffset,$ExpectedInsertLength,$ExpectedLeadingSequence,$ExpectedTrailingSequence,$ErrorThresholdLeading,$ErrorThresholdTrailing,\%Library,@Barcodes);
 	$ProcessManager->finish;
 }
 $ProcessManager->wait_all_children;
