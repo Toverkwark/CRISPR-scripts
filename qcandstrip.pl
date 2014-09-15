@@ -34,8 +34,8 @@ my $InputFile;
 my $OutputFile;
 my $ReportFile;
 my $LibraryFile;
-my $RecordsAnalyzed;
-my $NotAnalyzed;
+my $RecordsAnalyzed=0;
+my $NotAnalyzed="";
 
 GetOptions(
 	"input=s"  => \$InputFile,
@@ -45,7 +45,7 @@ GetOptions(
 );
 
 if ( !$OutputFile ) {
-	$OutputFile = $InputFile . ".stripped";
+	$OutputFile = $InputFile . ".output";
 }
 
 if ( !$ReportFile ) {
@@ -55,7 +55,6 @@ if ( !$ReportFile ) {
 open( INPUT, $InputFile ) or die "ERROR in $0:Input file $InputFile is not accessible.\n";
 open( OUTPUT, ">", $OutputFile ) or die "ERROR in $0:Output file $OutputFile is not accessible.\n";
 open( REPORT, ">", $ReportFile ) or die "ERROR in $0:Report file $ReportFile is not accessible.\n";
-open( NOTANALYZED, ">", $InputFile . ".notanalyzed") or die "ERROR in $0:File " . $InputFile . ".analyzed is not accessible.\n";
 open( LIBRARY, $LibraryFile ) or die "ERROR in $0:Library file $LibraryFile is not accessible.\n";
 
 #Start by reading in the library file
@@ -89,6 +88,8 @@ while (defined (my $Line=<INPUT> )) {
 	print {$FileHandlers{$Thread}} $Line;
 	$Thread++;
 }
+close (INPUT) or die "Could not close input file $InputFile";
+
 for (my $i=1;$i<=$NumberOfThreads;$i++) {
 	close($FileHandlers{$i});
 }
@@ -100,8 +101,66 @@ for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
 }
 $ProcessManager->wait_all_children;
 
-#Write all the not analyzed data
-print NOTANALYZED $NotAnalyzed;
+#Loop through all temp files to obtain data
+open( NOTANALYZED, ">", $InputFile . ".notanalyzed") or die "ERROR in $0:File " . $InputFile . ".analyzed is not accessible.\n";
+for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
+	print "Reading results from tempfile $Thread\n";
+	open(INPUT,($InputFile . "." .$Thread . ".tmp")) or die "Could not open temporary result file $InputFile.$Thread.tmp\n";
+	#Read Results
+	my $Line=<INPUT>;
+	while(($Line=<INPUT>) ne "***LEADING ERRORS***\n") {
+		chomp($Line);
+		my @Values=split(/\t/,$Line);
+		$Results{$Values[0]}->[$Values[1]]+=$Values[2];
+	}
+	#Read Leading Errors
+	while(($Line=<INPUT>) ne "***TRAILING ERRORS***\n") {
+		chomp($Line);
+		my @Values=split(/\t/,$Line);
+		$LeadingErrors{$Values[0]}->{$Values[1]}+=$Values[2];
+	}
+	#Read Trailing Errors
+	while(($Line=<INPUT>) ne "***INSERT LENGTHS***\n") {
+		chomp($Line);
+		my @Values=split(/\t/,$Line);
+		$TrailingErrors{$Values[0]}->{$Values[1]}+=$Values[2];
+	}
+	#Read Insert Lengths
+	while(($Line=<INPUT>) ne "***INSERT COUNTS***\n") {
+		chomp($Line);
+		my @Values=split(/\t/,$Line);
+		$InsertLengths{$Values[0]}+=$Values[1];
+	}
+	#Read Insert Counts
+	while(($Line=<INPUT>) ne "***QUALITIES BY BARCODE***\n") {
+		chomp($Line);
+		my @Values=split(/\t/,$Line);
+		$InsertCounts{$Values[0]}->{$Values[1]}+=$Values[2];
+	}
+	#Read Qualities By Barcode
+	while(($Line=<INPUT>) ne "***RECORDS ANALYZED***\n") {
+		chomp($Line);
+		my @Values=split(/\t/,$Line);
+		$QualitiesByBarcode{$Values[0]}->{$Values[1]}+=$Values[2];
+	}
+	#Read Records Analyzed
+	$Line=<INPUT>;
+	chomp($Line);
+	$RecordsAnalyzed=$RecordsAnalyzed+$Line;
+	#Read Records not analyzed
+	$Line=<INPUT>;
+	while (defined ($Line=<INPUT>)) {
+		print NOTANALYZED $Line;
+	}
+	close(INPUT) or die "Could not open temporary result file $InputFile$Thread.tmp\n";
+}
+close(NOTANALYZED) or die "Could not close file $InputFile.notanalyzed\n";
+
+#Delete intermediate files
+for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
+	unlink($InputFile . "." . $Thread);
+	unlink($InputFile . "." . $Thread . ".tmp");
+}
 
 #Output the insert size distribution
 print "Writing insert size distribution to report\n";
@@ -206,10 +265,9 @@ foreach my $InsertSequence (sort {$Library{$a} cmp $Library{$b}} keys %Library) 
 
 close(OUTPUT) or die "Could not close output file $OutputFile.\n";
 close(REPORT) or die "Could not close report file $ReportFile.\n";
-close(NOTANALYZED) or die "Could not close file $InputFile.notanalyzed\n";
 
 my $EndTime=time;
-print "Time spent analyzing:" . ($EndTime-$StartTime) . " seconds, or " . ($RecordsAnalyzed/($EndTime-$StartTime)) . " sequences per second\n";
+print "Time spent analyzing:" . ($EndTime-$StartTime) . " seconds. Analyzed $RecordsAnalyzed sequences, or " . ($RecordsAnalyzed/($EndTime-$StartTime)) . " sequences per second\n";
 
 
 

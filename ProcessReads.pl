@@ -30,7 +30,7 @@ sub ProcessReads($$$$$$$$$) {
 		my $line3 = <INPUT>;
 		my $Qualities = <INPUT>;
 		chomp($Sequence);
-		chomp($Qualitiges);
+		chomp($Qualities);
 		#Get the barcode. See if it exists. If not, try to map it with maximally 1 nucleotide replacement and only 1 match existing.
 		my $Barcode = substr( $Sequence, $BarcodeOffset, $BarcodeLength );
 		if ( grep( /$Barcode/, @Barcodes ) ) {
