@@ -6,22 +6,22 @@ sub ProcessReads($$$$$$$$$) {
 	my %InsertCounts;
 	my %QualitiesByBarcode;
 	my %Results;
-	my $BarcodeFound=0;
-	my $BarcodeFoundExact=0;
-	my $LeadingSequenceFound=0;
-	my $LeadingSequenceFoundExact=0;
-	my $TrailingSequenceFound=0;
-	my $TrailingSequenceFoundExact=0;
-	my $LeadingAndTrailingFound=0;
-	my $InsertCorrectLength=0;
-	my $InsertInLibrary=0;
-	my $InsertSequence;
 	my $RecordsAnalyzed=0;
 	my $NotAnalyzed;
 		
 	open( INPUT, $InputFile ) or die "ERROR in $0:Input file $InputFile is not accessible.\n";
 	
 	while ( defined( my $line = <INPUT> ) ) {
+		my $BarcodeFound=0;
+		my $BarcodeFoundExact=0;
+		my $LeadingSequenceFound=0;
+		my $LeadingSequenceFoundExact=0;
+		my $TrailingSequenceFound=0;
+		my $TrailingSequenceFoundExact=0;
+		my $LeadingAndTrailingFound=0;
+		my $InsertCorrectLength=0;
+		my $InsertInLibrary=0;
+		my $InsertSequence;
 		$RecordsAnalyzed++;
 		if ( !( $RecordsAnalyzed % 100 ) ) {
 			print "Analyzing record $RecordsAnalyzed of inputfile $InputFile\n";
