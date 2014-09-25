@@ -170,47 +170,10 @@ for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
 	unlink($InputFile . "." . $Thread . ".tmp");
 }
 
-#Output the insert size distribution
-print "Writing insert size distribution to report\n";
-print REPORT "Insert sizes\n";
-foreach my $InsertLength (sort {$a <=> $b} keys %InsertLengths) {
-	print REPORT "Size\t" . ($InsertLength) . "\t" . $InsertLengths{$InsertLength} . "\n";
-}
-print REPORT "\n";
-
-#Output the leading error information
-print "Writing leading error information to report\n";
-print REPORT "Leading errors\nPosition\tInsertions\tDeletions\tMutations\n";
-foreach my $Position (sort {$a <=> $b} keys %LeadingErrors) {
-	my $TotalErrors=0;
-	print REPORT "$Position\t";
-	my @ErrorTypes = ('Insertion', 'Deletion', 'Mutation');
-	foreach my $ErrorType (@ErrorTypes) {
-		$TotalErrors=$TotalErrors+$LeadingErrors{$Position}->{$ErrorType};
-		print REPORT $LeadingErrors{$Position}->{$ErrorType} . "\t";
-	}
-	print REPORT $TotalErrors . "\n";
-}
-print REPORT "\n";
-
-#Output the trailing error information
-print "Writing trailing error information to report\n";
-print REPORT "Trailing errors\nPosition\tInsertions\tDeletions\tMutations\n";
-foreach my $Position (sort {$a <=> $b} keys %TrailingErrors) {
-	my $TotalErrors=0;
-	print REPORT "$Position\t";
-	my @ErrorTypes = ('Insertion', 'Deletion', 'Mutation');
-	foreach my $ErrorType (@ErrorTypes) {
-		$TotalErrors=$TotalErrors+$TrailingErrors{$Position}->{$ErrorType};
-		print REPORT $TrailingErrors{$Position}->{$ErrorType} . "\t";
-	}
-	print REPORT $TotalErrors . "\n";
-}
-print REPORT "\n";
-
 #Print report of read filtering per barcode
 print "Writing filtering steps per barcode\n";
 my @Totals;
+print REPORT "Filtering results\n";
 print REPORT "Barcode\tBarcodes Found\tPerfect Barcodes Found\tLeader found\tPerfect leaders found\tTrailers found\tPerfect trailers found\tLeader and trailes found\tCorrect insert length\tInserts in library\tPerfect Leader and trailes found\tPerfect Correct insert length\tPerfect Inserts in library\n";
 foreach my $Barcode ( @Barcodes ) {
 	print REPORT "$Barcode\t";
@@ -248,6 +211,45 @@ foreach my $Barcode ( @Barcodes ) {
 	}
 	print REPORT "\n";
 }
+
+#Output the insert size distribution
+print "Writing insert size distribution to report\n";
+print REPORT "\nInsert sizes\n";
+foreach my $InsertLength (sort {$a <=> $b} keys %InsertLengths) {
+	print REPORT "Size\t" . ($InsertLength) . "\t" . sprintf("%4.3f%%",(100*$InsertLengths{$InsertLength} / $Totals[6])) . "\n";
+}
+print REPORT "\n";
+
+#Output the leading error information
+print "Writing leading error information to report\n";
+print REPORT "Leading errors\nPosition\tInsertions\tDeletions\tMutations\n";
+foreach my $Position (sort {$a <=> $b} keys %LeadingErrors) {
+	my $TotalErrors=0;
+	print REPORT "$Position\t";
+	my @ErrorTypes = ('Insertion', 'Deletion', 'Mutation');
+	foreach my $ErrorType (@ErrorTypes) {
+		$TotalErrors=$TotalErrors+$LeadingErrors{$Position}->{$ErrorType};
+		print REPORT sprintf("%4.3f%%",(100*$LeadingErrors{$Position}->{$ErrorType} / $Totals[2])) . "\t";
+	}
+	print REPORT sprintf("%4.3f%%",(100*$TotalErrors / $Totals[2])) . "\n";
+}
+print REPORT "\n";
+
+#Output the trailing error information
+print "Writing trailing error information to report\n";
+print REPORT "Trailing errors\nPosition\tInsertions\tDeletions\tMutations\n";
+foreach my $Position (sort {$a <=> $b} keys %TrailingErrors) {
+	my $TotalErrors=0;
+	print REPORT "$Position\t";
+	my @ErrorTypes = ('Insertion', 'Deletion', 'Mutation');
+	foreach my $ErrorType (@ErrorTypes) {
+		$TotalErrors=$TotalErrors+$TrailingErrors{$Position}->{$ErrorType};
+		print REPORT sprintf("%4.3f%%",(100*$TrailingErrors{$Position}->{$ErrorType} / $Totals[4])) . "\t";
+	}
+	print REPORT sprintf("%4.3f%%",(100*$TotalErrors / $Totals[4])) . "\n";
+}
+print REPORT "\n";
+
 
 #Output the read counts of library hits
 print "Writing filtered library insert counts\n";
