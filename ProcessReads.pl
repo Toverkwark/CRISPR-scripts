@@ -4,6 +4,7 @@ sub ProcessReads($$$$$$$$$) {
 	my %TrailingErrors;
 	my %InsertLengths;
 	my %InsertCounts;
+	my %PerfectInsertCounts;
 	my %QualitiesByBarcode;
 	my %Results;
 	my $RecordsAnalyzed=0;
@@ -166,12 +167,16 @@ sub ProcessReads($$$$$$$$$) {
  			if($LeadingSequenceFound && $TrailingSequenceFound) {
 				$InsertLengths{$InsertLength}++;
 				$Results{$Barcode}->[6]++;
+				$Results{$Barcode}->[9]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);
 				if($InsertLength==$ExpectedInsertLength) {
-					$Results{$Barcode}->[7]++;			
+					$Results{$Barcode}->[7]++;
+					$Results{$Barcode}->[10]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);			
 					$InsertSequence=substr($Sequence,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)),$InsertLength);
 					if($$Library{$InsertSequence}) {
 						$Results{$Barcode}->[8]++;
+						$Results{$Barcode}->[11]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);
 						$InsertCounts{$InsertSequence}->{$Barcode}++;
+						$PerfectInsertCounts{$InsertSequence}->{$Barcode}++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);
 					}	
 				}
 			}
@@ -215,6 +220,13 @@ sub ProcessReads($$$$$$$$$) {
 	foreach my $Sequence (keys %InsertCounts) {
 		foreach my $Barcode (keys $InsertCounts{$Sequence}) {
 			print OUTPUT "$Sequence\t$Barcode\t" . $InsertCounts{$Sequence}->{$Barcode} . "\n";
+		}
+	}
+	
+	print OUTPUT "***PERFECT INSERT COUNTS***\n";
+	foreach my $Sequence (keys %PerfectInsertCounts) {
+		foreach my $Barcode (keys $PerfectInsertCounts{$Sequence}) {
+			print OUTPUT "$Sequence\t$Barcode\t" . $PerfectInsertCounts{$Sequence}->{$Barcode} . "\n";
 		}
 	}
 	

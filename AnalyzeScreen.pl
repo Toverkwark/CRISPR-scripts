@@ -30,6 +30,7 @@ my %TrailingErrors;
 my %InsertLengths;
 my %QualitiesByBarcode;
 my %InsertCounts;
+my %PerfectInsertCounts;
 my $InputFile;
 my $OutputFile;
 my $ReportFile;
@@ -54,6 +55,7 @@ if ( !$ReportFile ) {
 
 open( INPUT, $InputFile ) or die "ERROR in $0:Input file $InputFile is not accessible.\n";
 open( OUTPUT, ">", $OutputFile ) or die "ERROR in $0:Output file $OutputFile is not accessible.\n";
+open( PERFECTOUTPUT, ">", ($OutputFile . ".perfect")) or die "ERROR in $0:Output file $OutputFile.perfect is not accessible.\n";
 open( REPORT, ">", $ReportFile ) or die "ERROR in $0:Report file $ReportFile is not accessible.\n";
 open( LIBRARY, $LibraryFile ) or die "ERROR in $0:Library file $LibraryFile is not accessible.\n";
 
@@ -132,10 +134,16 @@ for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
 		$InsertLengths{$Values[0]}+=$Values[1];
 	}
 	#Read Insert Counts
-	while(($Line=<INPUT>) ne "***QUALITIES BY BARCODE***\n") {
+	while(($Line=<INPUT>) ne "***PERFECT INSERT COUNTS***\n") {
 		chomp($Line);
 		my @Values=split(/\t/,$Line);
 		$InsertCounts{$Values[0]}->{$Values[1]}+=$Values[2];
+	}
+	#Read Perfect Insert Counts
+	while(($Line=<INPUT>) ne "***QUALITIES BY BARCODE***\n") {
+		chomp($Line);
+		my @Values=split(/\t/,$Line);
+		$PerfectInsertCounts{$Values[0]}->{$Values[1]}+=$Values[2];
 	}
 	#Read Qualities By Barcode
 	while(($Line=<INPUT>) ne "***RECORDS ANALYZED***\n") {
@@ -203,24 +211,19 @@ print REPORT "\n";
 #Print report of read filtering per barcode
 print "Writing filtering steps per barcode\n";
 my @Totals;
-print REPORT "Barcode\tBarcodes Found\tPerfect Barcodes Found\tLeader found\tPerfect leaders found\tTrailers found\tPerfect trailers found\tLeader and trailes found\tCorrect insert length\tInserts in library\n";
+print REPORT "Barcode\tBarcodes Found\tPerfect Barcodes Found\tLeader found\tPerfect leaders found\tTrailers found\tPerfect trailers found\tLeader and trailes found\tCorrect insert length\tInserts in library\tPerfect Leader and trailes found\tPerfect Correct insert length\tPerfect Inserts in library\n";
 foreach my $Barcode ( @Barcodes ) {
 	print REPORT "$Barcode\t";
-	for ( my $counter = 0 ; $counter <= 8 ; $counter++ ) {
+	for ( my $counter = 0 ; $counter <= 11 ; $counter++ ) {
 		print REPORT sprintf( "%i", $Results{$Barcode}->[$counter] ) . "\t";
 		$Totals[$counter] += $Results{$Barcode}->[$counter];
 	}
-	if ( $Results{$Barcode}->[0] > 0 ) {
-		print REPORT sprintf( "%4.2f%%", 100 * ( $Results{$Barcode}->[8] / $Results{$Barcode}->[0] ) ) . "\n";
-	}
-	else {
-		print REPORT sprintf( "%4.2f%%", 0 ) . "\n";
-	}
+	print REPORT "\n";
 }
-print REPORT sprintf( "TOTAL\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i", $Totals[0], $Totals[1], $Totals[2], $Totals[3], $Totals[4], $Totals[5], $Totals[6], $Totals[7], $Totals[8]);
+print REPORT sprintf( "TOTAL\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i", $Totals[0], $Totals[1], $Totals[2], $Totals[3], $Totals[4], $Totals[5], $Totals[6], $Totals[7], $Totals[8], $Totals[9], $Totals[10], $Totals[11]);
 
 print REPORT sprintf(
-	"\n\t\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%",
+	"\n\t\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%\t%4.2f%%",
 	100 * $Totals[1] / $Totals[0],
 	100 * $Totals[2] / $Totals[0],
 	100 * $Totals[3] / $Totals[0],
@@ -229,6 +232,9 @@ print REPORT sprintf(
 	100 * $Totals[6] / $Totals[0],
 	100 * $Totals[7] / $Totals[0],
 	100 * $Totals[8] / $Totals[0],
+	100 * $Totals[9] / $Totals[0],
+	100 * $Totals[10] / $Totals[0],
+	100 * $Totals[11] / $Totals[0],
 );
 print REPORT "\n\nAnalyzed reads\t" . sprintf( "%i", $RecordsAnalyzed ) . "\n\n";
 
@@ -263,7 +269,28 @@ foreach my $InsertSequence (sort {$Library{$a} cmp $Library{$b}} keys %Library) 
 	print OUTPUT "\n";
 }
 
+#Output the read counts of library hits that are 100% perfect
+print "Writing filtered library insert counts that are 100% perfect\n";
+print PERFECTOUTPUT "LibraryID\tSequence";
+foreach my $Barcode (@Barcodes) {
+	print PERFECTOUTPUT "\t$Barcode";
+}
+print PERFECTOUTPUT "\n";
+foreach my $InsertSequence (sort {$Library{$a} cmp $Library{$b}} keys %Library) {
+	print PERFECTOUTPUT $Library{$InsertSequence} . "\t" . $InsertSequence;
+	foreach my $Barcode (@Barcodes) {
+		if($PerfectInsertCounts{$InsertSequence}->{$Barcode}) {
+			print PERFECTOUTPUT "\t" . $PerfectInsertCounts{$InsertSequence}->{$Barcode};	
+		}
+		else {
+			print PERFECTOUTPUT "\t0";
+		}
+	}
+	print PERFECTOUTPUT "\n";
+}
+
 close(OUTPUT) or die "Could not close output file $OutputFile.\n";
+close(PERFECTOUTPUT) or die "Could not close output file $OutputFile.perfect.\n";
 close(REPORT) or die "Could not close report file $ReportFile.\n";
 
 my $EndTime=time;
