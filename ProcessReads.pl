@@ -151,7 +151,6 @@ sub ProcessReads($$$$$$$$$) {
 			#Store the quality information of this read in a per barcode manner
 			my $CharNumber=0;
 			foreach my $Char (split //, $Qualities) {
- 				lock(%QualitiesByBarcode);
  				$QualitiesByBarcode{$Barcode}->{$CharNumber} += ord($Char) unless ord($Char)==10;
  				$CharNumber++;
  			}
@@ -165,13 +164,11 @@ sub ProcessReads($$$$$$$$$) {
  			}
  			
  			if($LeadingSequenceFound && $TrailingSequenceFound) {
-				lock(%InsertLengths);
 				$InsertLengths{$InsertLength}++;
 				$Results{$Barcode}->[6]++;
 				if($InsertLength==$ExpectedInsertLength) {
 					$Results{$Barcode}->[7]++;			
 					$InsertSequence=substr($Sequence,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)),$InsertLength);
-					lock(%$Library);
 					if($$Library{$InsertSequence}) {
 						$Results{$Barcode}->[8]++;
 						$InsertCounts{$InsertSequence}->{$Barcode}++;
