@@ -4,6 +4,8 @@ use strict;
 #use threads;
 #use threads::shared;
 use Parallel::ForkManager;
+#Uncomment next line in case running on the cluster
+#use lib "/home/b.evers/perl5/lib/perl5";
 require "Damerau.pl";
 require "ProcessReads.pl";
 sub MatchBarcode($@);
