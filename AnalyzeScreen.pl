@@ -3,9 +3,9 @@ use Term::ANSIColor;
 use strict;
 #use threads;
 #use threads::shared;
-use Parallel::ForkManager;
 #Uncomment next line in case running on the cluster
-#use lib "/home/b.evers/perl5/lib/perl5";
+use lib "/home/b.evers/perl5/lib/perl5";
+use Parallel::ForkManager;
 require "Damerau.pl";
 require "ProcessReads.pl";
 sub MatchBarcode($@);
@@ -23,8 +23,8 @@ my $ExpectedInsertLength = 20; #Number of nucleotides of the insert between lead
 
 #Expected sequences, uncomment the relevant ones
 #For GECKO v2 Libraries:
-my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
-my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
+#my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+#my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #For iKRUNC v1 Libraries:
 #my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 #my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
@@ -35,9 +35,9 @@ my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCA
 #my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 #my $ExpectedTrailingSequence = "GTTTAAGAGCTATGCTGGAAACAGCATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #For TRC Libraries (ALSO ADJUST EXPECTED INSERT LENGTH):
-#my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCGG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
-#my $ExpectedTrailingSequence = "TTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
-#$ExpectedInsertLength=##;
+my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCGG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+my $ExpectedTrailingSequence = "TTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
+#$ExpectedInsertLength=21+6+21;
 
 my $ErrorThresholdLeading = 20; #This number of mutations or indels can be present in the leading  sequences
 my $ErrorThresholdTrailing = 20; #This number of mutations or indels can be present in the trailing sequences
