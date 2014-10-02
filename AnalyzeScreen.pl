@@ -4,7 +4,7 @@ use strict;
 #use threads;
 #use threads::shared;
 #Uncomment next line in case running on the cluster
-use lib "/home/b.evers/perl5/lib/perl5";
+use lib "/home/NKI/b.evers/perl5/lib/perl5";
 use Parallel::ForkManager;
 require "Damerau.pl";
 require "ProcessReads.pl";
