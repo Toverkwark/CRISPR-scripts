@@ -38,13 +38,21 @@ for (my $Depth=1;$Depth<=$MaxDepth;$Depth++)
 }
 my $Depth=$MaxDepth;
 foreach my $Relative (keys $Relatives{$Depth}) {
-	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "GGG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "AAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "CAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "TAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "GAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "ACG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "CCG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "TCG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "GCG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "ATG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "CTG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "TTG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "GTG\n";
 	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "AGG\n";
-	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "TGG\n";
 	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "CGG\n";
-	#print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "GAG\n";
-	#print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "AAG\n";
-	#print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "TAG\n";
-	#print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "CAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "TGG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$InputSequence\n$Relative" . "GGG\n";
 }
 close (OUT) or die "ERROR in $ScriptName: Cannot close outputfile $OutputFile\n";

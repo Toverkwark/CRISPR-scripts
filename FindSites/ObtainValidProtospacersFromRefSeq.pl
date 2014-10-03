@@ -1,7 +1,7 @@
 use Getopt::Std;
 use warnings;
 use strict;
-require '/home/NKI/b.evers/CRISPR/FetchGenomicSequence.pl';
+require 'FetchGenomicSequence.pl';
 
 sub FetchGenomicSequence($$$);
 my $ScriptName="ObtainValidProtospacersFromRefSeq.pl";
@@ -20,7 +20,7 @@ my %TargetSites;
 
 getopt( 'ro', \%opts );
 die "ERROR in $ScriptName: No RefSeq ID given.\n" unless my $RefSeq = $opts{'r'};
-my $RefSeqInfo = `grep -P "$RefSeq\t" /home/NKI/b.evers/RefSeq/refGene.txt`;
+my $RefSeqInfo = `grep -P "$RefSeq\t" ../refseq/hg19.txt`;
 die "ERROR in $ScriptName: RefSeq $RefSeq cannot be found in the database.\n" if !$RefSeqInfo;
 die "ERROR in $ScriptName: No Outputfile given.\n" unless my $OutputFile = $opts{'o'};
 open (OUT, ">", $OutputFile) or die "Cannot open outpufile $OutputFile\n";

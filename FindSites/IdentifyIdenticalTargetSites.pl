@@ -24,10 +24,13 @@ while (defined(my $Line = <IN>)) {
 		$Protospacers{$TargetSequence}->[1]=$Line;
 	}
 }
-foreach my $TargetSequence (keys %Protospacers) {
+foreach my $TargetSequence (sort {$a cmp $b} keys %Protospacers) {
 	#Only output protospacers with unique target sites 
 	if($Protospacers{$TargetSequence}->[0]==1) {
 		print OUT $Protospacers{$TargetSequence}->[1] . "\n";
+	}
+	else {
+		print "Target sequence $TargetSequence has multiple NNG sites in the genome\n";
 	}
 }
 close (IN) or die "ERROR in $ScriptName: Cannot close inputfile $InputFile\n";
