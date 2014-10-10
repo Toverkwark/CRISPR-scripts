@@ -24,14 +24,14 @@ while (defined(my $Line=<IN>)) {
 }
 
 #Search for valid protospacers in the sense strand
-while ( $QuerySequence =~ /(?<=(.{22}))(G)/g ) {
+while ( $QuerySequence =~ /(?<=(.{21}))(G)/g ) {
 	$TargetSites{substr( $1, 0, 20 )}++;
 	$Pos++;
 }
 	
 #Search for valid protospacers in the antisense strand
-while ( $QuerySequence =~ /(?=(.{23}))(C)/g ) {
-	my $TargetSequence = substr($1,3,20);
+while ( $QuerySequence =~ /(?=(.{22}))(C)/g ) {
+	my $TargetSequence = substr($1,2,20);
 	$TargetSequence =~ tr/ACTG/TGAC/;
 	$TargetSequence = reverse($TargetSequence);
 	$TargetSites{$TargetSequence}++;
@@ -42,22 +42,22 @@ while ( $QuerySequence =~ /(?=(.{23}))(C)/g ) {
 foreach my $TargetSite ( sort {$a cmp $b} keys %TargetSites ) {
 	#Test for >5xT in the sequence
 	unless ($TargetSite =~ /TTTTT/) {
-		print OUT "$TargetSite" . "AAG\n";
-		print OUT "$TargetSite" . "CAG\n";
-		print OUT "$TargetSite" . "GAG\n";
-		print OUT "$TargetSite" . "TAG\n";
-		print OUT "$TargetSite" . "ACG\n";
-		print OUT "$TargetSite" . "CCG\n";
-		print OUT "$TargetSite" . "GCG\n";
-		print OUT "$TargetSite" . "TCG\n";
+		print OUT "$TargetSite" . "AGA\n";
+		print OUT "$TargetSite" . "CGA\n";
+		print OUT "$TargetSite" . "GGA\n";
+		print OUT "$TargetSite" . "TGA\n";
+		print OUT "$TargetSite" . "AGC\n";
+		print OUT "$TargetSite" . "CGC\n";
+		print OUT "$TargetSite" . "GGC\n";
+		print OUT "$TargetSite" . "TGC\n";
 		print OUT "$TargetSite" . "AGG\n";
 		print OUT "$TargetSite" . "CGG\n";
 		print OUT "$TargetSite" . "GGG\n";
 		print OUT "$TargetSite" . "TGG\n";
-		print OUT "$TargetSite" . "ATG\n";
-		print OUT "$TargetSite" . "CTG\n";
-		print OUT "$TargetSite" . "GTG\n";
-		print OUT "$TargetSite" . "TTG\n";
+		print OUT "$TargetSite" . "AGT\n";
+		print OUT "$TargetSite" . "CGT\n";
+		print OUT "$TargetSite" . "GGT\n";
+		print OUT "$TargetSite" . "TGT\n";
 	}
 }
 
