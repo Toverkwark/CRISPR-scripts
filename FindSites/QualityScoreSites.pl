@@ -67,21 +67,23 @@ while (defined(my $Line=<IN>)) {
 		$ProcessRelatives = 1;
 		$RelativesFound{$TargetSequence} = 0;
 		$ExonicRelativesFound{$TargetSequence} = 0;
-		`perl /home/NKI/b.evers/CRISPR/FindRelativesOfOligo.pl -i $TargetSequence -o $PotentialRelativesFile -d $Depth -s $SeedLength`;
+		`perl FindRelativesOfOligo.pl -i $TargetSequence -o $PotentialRelativesFile -d $Depth -s $SeedLength`;
 	}
 }
 close (IN) or die "ERROR in $ScriptName: Cannot close inputfile $InputFile\n";
 
-#Map all the relatives to the genome
+#Map all the relatives to the genome. Write everything that maps to a separate file
 if ($ProcessRelatives) {
-	`bowtie2 /home/NKI/b.evers/hg19-index/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a --mm -S $RelativesMatchFile`;	
+	`/media/Data/iKRUNC/bowtie2-2.1.0/bowtie2 /media/Data/iKRUNC/hg19-index/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a --mm -S $RelativesMatchFile`;	
 	
 	#Read in everything that was mapped
 	open (IN, $RelativesMatchFile) or die "ERROR in $ScriptName: Cannot open relatives match file $RelativesMatchFile\n";
+	open (OUT, ">", ($OutputFile . ".relatives")) or die "ERROR in $ScriptName: Cannot open outputfile " . ($OutputFile . ".relatives") . "\n";
 	while (defined(my $Line=<IN>)) {
 		chomp($Line);
 		my @SAMValues = split( /\t/, $Line );
 		if(!($SAMValues[1] & 4)) {
+			print OUT $Line . "\n";
 			my $ProtospacerSequence = $SAMValues[0];
 			my $TargetSequence=substr($ProtospacerSequence,13,20);
 			$RelativesFound{$TargetSequence}++;
@@ -91,6 +93,7 @@ if ($ProcessRelatives) {
 		}
 	}
 	close (IN) or die "ERROR in $ScriptName: Cannot close relatives match file $RelativesMatchFile\n";
+	close (OUT) or die "ERROR in $ScriptName: Cannot close outputfile " . ($OutputFile . ".relatives") . "\n";
 	unlink $RelativesMatchFile;
 	unlink $PotentialRelativesFile;
 }
@@ -99,7 +102,7 @@ if ($ProcessRelatives) {
 open (OUT, ">", $OutputFile) or die "ERROR in $ScriptName: Cannot open outputfile $OutputFile\n";
 my $TargetsFound;
 my $TargetsNotFound;
-foreach my $TargetSequence (keys %OutputText) {
+foreach my $TargetSequence (sort {$a cmp $b} keys %OutputText) {
 	print OUT $OutputText{$TargetSequence} . "\t". $RelativesFound{$TargetSequence} . "\t" . $ExonicRelativesFound{$TargetSequence} . "\n";
 }	
 close (OUT) or die "ERROR in $ScriptName: Cannot close outputfile $OutputFile\n";
