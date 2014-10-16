@@ -70,7 +70,7 @@ close (IN) or die "ERROR in $ScriptName: Cannot close inputfile $InputFile\n";
 
 #Map all the relatives to the genome. Write everything that maps to a separate file
 if ($ProcessRelatives) {
-	`/media/Data/iKRUNC/bowtie2-2.1.0/bowtie2 /media/Data/iKRUNC/hg19-index/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a -S $RelativesMatchFile`;	
+	`/media/Data/iKRUNC/bowtie2-2.1.0/bowtie2 /media/Data/iKRUNC/hg19-index/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a -S $RelativesMatchFile -p 4`;	
 	
 	#Read in everything that was mapped
 	open (IN, $RelativesMatchFile) or die "ERROR in $ScriptName: Cannot open relatives match file $RelativesMatchFile\n";
@@ -92,8 +92,8 @@ if ($ProcessRelatives) {
 	}
 	close (IN) or die "ERROR in $ScriptName: Cannot close relatives match file $RelativesMatchFile\n";
 	close (OUT) or die "ERROR in $ScriptName: Cannot close outputfile " . ($OutputFile . ".relatives") . "\n";
-#	unlink $RelativesMatchFile;
-#	unlink $PotentialRelativesFile;
+	unlink $RelativesMatchFile;
+	unlink $PotentialRelativesFile;
 }
 
 #Write the output file, with an extra column indicating how many relatives were found and one indicating how many of those were found near exons
