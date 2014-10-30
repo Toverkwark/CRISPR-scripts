@@ -70,7 +70,7 @@ for my $Row (0..@Screen-1) {
 print "Calculating size factors\n";
 my @SizeFactors;
 for my $Column (0..@{$SizeFactorData[0]}-1) {
-	push(@SizeFactors,median(@{$SizeFactorData[$Column]}));
+	push(@SizeFactors,median(map {$$_[$Column]} @SizeFactorData));
 }
 
 #Apply the normalization
@@ -82,35 +82,39 @@ for my $Row (0..@Screen-1) {
 	}	
 }
 
-#Create plot
+#Create plot, first create axes
 print "Creating plot\n";
 open( OUTPUT, ">>", $OutputFile ) or die "ERROR in $0:Output file $OutputFile is not accessible.\n";
-print OUTPUT '<line x1="0" y1="0" x2="' . $HorizontalPixels . '" y2="0" stroke-width=".1" stroke="black" />ń';
-print OUTPUT '<line x1="0" y1="0" x2="0" y2="' . $VerticalPixels . '" stroke-width=".1" stroke="black" />ń';
-print OUTPUT '<line x1="' . $HorizontalPixels . '" y1="0" x2="' . $HorizontalPixels . '" y2="' . $VerticalPixels . '" stroke-width=".1" stroke="black" />ń';
-print OUTPUT '<line x1="0" y1="' . $VerticalPixels . '" x2="' . $HorizontalPixels . '" y2="' . $VerticalPixels . '" stroke-width=".1" stroke="black" />ń';
-for (my $i=-20;$i<=20;$i++) {
+print OUTPUT '<line x1="0" y1="0" x2="' . $HorizontalPixels . '" y2="0" stroke-width="0.5" stroke="black" />ń';
+print OUTPUT '<line x1="0" y1="0" x2="0" y2="' . $VerticalPixels . '" stroke-width="0.5" stroke="black" />ń';
+print OUTPUT '<line x1="' . $HorizontalPixels . '" y1="0" x2="' . $HorizontalPixels . '" y2="' . $VerticalPixels . '" stroke-width="0.5" stroke="black" />ń';
+print OUTPUT '<line x1="0" y1="' . $VerticalPixels . '" x2="' . $HorizontalPixels . '" y2="' . $VerticalPixels . '" stroke-width="0.5" stroke="black" />ń';
+for (my $i=$MinimalY;$i<=$MaximalY;$i++) {
 	my $VerticalLevel=(-$i-$MinimalY)*$VerticalPixels/($MaximalY-$MinimalY);
-	if($VerticalLevel>=0 && $VerticalLevel<=$VerticalPixels) {
-		print OUTPUT '<line x1="0" y1="' . $VerticalLevel . '" x2="' . $HorizontalPixels . '" y2="' . $VerticalLevel .'" stroke-width=".1" stroke="black" />ń';
-		print OUTPUT '<text font-family="Arial" x="' . 0.01*$HorizontalPixels . '" y="' . $VerticalLevel . '">' . $i . '</text>\n"';	
-	}
+	print OUTPUT '<line x1="0" y1="' . $VerticalLevel . '" x2="' . $HorizontalPixels . '" y2="' . $VerticalLevel .'" stroke-width=".2" stroke="black" />ń';
+	print OUTPUT '<text font-family="Arial" x="' . 0.01*$HorizontalPixels . '" y="' . $VerticalLevel . '">' . $i . '</text>\n"';
 }
 
-
+#Create plot, write all the datapoints
+my @jet=@{ReadColorMap("jet")};
 for my $Row (0..@NormalizedData-1) {
-	my $XPosition=0.5*(log($NormalizedData[$Row][$ControlColumn])/log(2)+log($NormalizedData[$Row][$TreatedColumn])/log(2));
-	my $YPosition=-((log($NormalizedData[$Row][$TreatedColumn])/log(2))-(log($NormalizedData[$Row][$ControlColumn])/log(2)));
-#	$YPosition=-$YPosition;
-	$XPosition=$XPosition-$MinimalX;
-	$XPosition=$XPosition*$HorizontalPixels/($MaximalX-$MinimalX);
-	$YPosition=$YPosition-$MinimalY;
-	$YPosition=$YPosition*$VerticalPixels/($MaximalY-$MinimalY);
+	#Determine MA Values
+	my $A=0.5*(log($NormalizedData[$Row][$ControlColumn])/log(2)+log($NormalizedData[$Row][$TreatedColumn])/log(2));
+	my $M=-((log($NormalizedData[$Row][$TreatedColumn])/log(2))-(log($NormalizedData[$Row][$ControlColumn])/log(2)));
+	#Normalize to current min/max settings
+	my $XPosition=($A-$MinimalX)*$HorizontalPixels/($MaximalX-$MinimalX);
+	my $YPosition=($M-$MinimalY)*$VerticalPixels/($MaximalY-$MinimalY);
 	$YPosition=0 if $YPosition<0;
 	$YPosition=$VerticalPixels if $YPosition > $VerticalPixels;
 	$XPosition=0 if $XPosition<0;
 	$XPosition=$HorizontalPixels if $XPosition > $HorizontalPixels;
-	my $Line='<circle class="' . ($Screen[$Row][0]) . '" selected="no" cx="' . $XPosition . '" cy="' . $YPosition . '" r="' . $PixelSize . '" stroke="black" stroke-width=".1" fill="red" onclick="ClickDetected(evt)" onmouseover="MouseOverDetected(evt)" onmouseout="MouseOutDetected(evt)"/>';
+	#Map color
+	my $ColorPosition=($M-0.25*$MinimalY)*$VerticalPixels/(0.25*$MaximalY-0.25*$MinimalY);
+	$ColorPosition=0 if $ColorPosition<0;
+	$ColorPosition=$VerticalPixels if $ColorPosition > $VerticalPixels;
+	my $ColorNumber=int(63*$ColorPosition/$VerticalPixels);
+	my @FillColor=@{$jet[$ColorNumber]};
+	my $Line='<circle class="' . ($Screen[$Row][0]) . '" selected="no" cx="' . $XPosition . '" cy="' . $YPosition . '" r="' . $PixelSize . '" stroke="black" stroke-width=".1" fill="rgb(' . $FillColor[0] . ',' .$FillColor[1] . ',' . $FillColor[2] . ')" onclick="ClickDetected(evt)" onmouseover="MouseOverDetected(evt)" onmouseout="MouseOutDetected(evt)"/>';
 	print OUTPUT $Line . "\n";
 }
 
@@ -122,7 +126,24 @@ sub mean {
     return sum(@_)/@_;
 }
 
-sub determinecolorvalue ($) {
-	my $Signal = shift(@_);
-	print $Signal;
+sub MapColor ($$$) {
+	my ($YPosition, $MinimalY, $MaximalY) = @_;
+	$YPosition
+}
+
+sub ReadColorMap($) {
+	my @Colormap;
+	my $FileName=shift(@_);
+	my $Row=-1;
+	open(IN,$FileName) or die "Could not open colormap file $FileName\n";
+	while(defined(my $Line=<IN>)) {
+		$Row++;
+		chomp($Line);
+		my @Color=split('\t',$Line);
+		$Color[0]=int($Color[0]*255);
+		$Color[1]=int($Color[1]*255);
+		$Color[2]=int($Color[2]*255);	
+		push(@{$Colormap[$Row]},@Color);
+	}
+	return \@Colormap;
 }
