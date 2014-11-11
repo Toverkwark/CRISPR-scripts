@@ -7,11 +7,13 @@ sub FetchGenomicSequence($$$);
 
 #Cas9 cuts here:
 #XXXXXXXXXXXXXXXXX|XXXNGG
+#In this Script, the last G of the NGG PAM sequence is considered the actual target in terms of locations in the genome
 
 my $TSSUpstream=50; #Use this number of nt upstream of any TSS for protospacer searching
 my $TSSDownstream=300; #Use this number of nt downstream of any TSS for protospacer searching
 my $MinimalGuideLength=19;
 my $MaximalGuideLength=22;
+my $PAMLength=3;
 
 my %opts;
 my %TargetSites;
@@ -39,12 +41,14 @@ while (defined (my $Line=<IN>)) {
 			$Orientation = 1;
 			$GeneStart    = $RefSeqValues[4]+1;
 			$GeneEnd      = $RefSeqValues[5];
-			$Sequence=FetchGenomicSequence($Chromosome,$GeneStart-17-$TSSUpstream,$GeneStart+17+$TSSDownstream) . "\n";
+			$Sequence=FetchGenomicSequence($Chromosome,$GeneStart-$MaximalGuideLength-$PAMLength-$TSSUpstream+1,$GeneStart+$MaximalGuideLength+$PAMLength+$TSSDownstream-1) . "\n";
 		}
 		else {
 			$GeneStart    = $RefSeqValues[5];
 			$GeneEnd      = $RefSeqValues[4]+1;
-			$Sequence=FetchGenomicSequence($Chromosome,$GeneStart-17-$TSSDownstream,$GeneStart+17+$TSSUpstream) . "\n";
+			$Sequence=FetchGenomicSequence($Chromosome,$GeneStart-$MaximalGuideLength-$PAMLength-$TSSDownstream+1,$GeneStart+$MaximalGuideLength+$PAMLength+$TSSUpstream-1) . "\n";
+			$Sequence =~ tr/ACTG/TGAC/;
+			$Sequence = reverse($Sequence);
 		}
 		$TargetSites{$Gene}->{$RefSeq}->{'Sequence'}=$Sequence;
 		$TargetSites{$Gene}->{$RefSeq}->{'TSS'}=$GeneStart;
@@ -58,49 +62,85 @@ close(IN) or die "Could not close inputfile\n";
 foreach my $Gene (keys %TargetSites) {
 	print "Working on gene $Gene\n";
 	foreach my $RefSeq (keys $TargetSites{$Gene}) {
-		my @ValidTargetSites;
+		my @ValidGuides;
 		print "\tRefSeq $RefSeq\n";
 		my $SearchSequence = $TargetSites{$Gene}->{$RefSeq}->{'Sequence'};
-		print $SearchSequence . "\n";
-		#Loop over guide length in search of a Weissman-like guide
+		#Loop over guide length in search of guides
 		for(my $GuideLength=$MinimalGuideLength;$GuideLength<=$MaximalGuideLength;$GuideLength++) {
-			#First search in the sense direction, run until the 12th nt from the end
-			my $FWSearchSequence=substr($SearchSequence,0,length($SearchSequence)-11);
-			while ( $FWSearchSequence =~ /(?<=(.{($GuideLength+1)})(GG))/g ) {
-					my $TargetSite=substr($1,0,$GuideLength);
-					push(@ValidTargetSites,substr($1,0,$GuideLength)) if(substr($TargetSite,0,1) eq 'G' || $GuideLength==20);
+			#First search in the sense direction
+			for(my $Position=$MaximalGuideLength-$GuideLength;$Position<length($SearchSequence)-($GuideLength+$PAMLength-1)-($MaximalGuideLength+$PAMLength);$Position++) {
+				my $Guide=substr($SearchSequence,$Position,$GuideLength+$PAMLength);
+				if(substr($Guide,-2) eq 'GG') {
+					my $GuideSequence = substr($Guide,0,$GuideLength);
+					if(substr($GuideSequence,0,1) eq 'G' || $GuideLength==20) {
+						my $ValidGuide={};
+						#Store position relative to TSS
+						my $GuidePosition=-$TSSUpstream+$Position-($MaximalGuideLength-$GuideLength);
+						$ValidGuide->{'Position'}=$GuidePosition;
+						$ValidGuide->{'GuideSequence'}=$GuideSequence;
+						$ValidGuide->{'Sense'}='Sense';
+						$ValidGuide->{'GuideLength'}=$GuideLength;
+						$ValidGuide->{'Extra'}=0;
+						$ValidGuide->{'Extra'}=1 if(substr($GuideSequence,0,1) ne 'G');
+						push(@ValidGuides,$ValidGuide);
+					}
+				}
 			}
-			
-			#Then search in the anstisense direction. Start at the 12th nt and run until the end
-			my $RVSearchSequence=substr($SearchSequence,11);	
-			while ( $RVSearchSequence =~ /(?=((CC).{$GuideLength+1}))/g ) {
-				my $TargetSite=substr($1,1,$GuideLength);
-				$TargetSite =~ tr/ACTG/TGAC/;
-				$TargetSite = reverse($TargetSite);
-				push(@ValidTargetSites,$TargetSite) if(substr($TargetSite,0,1) eq 'G' || $GuideLength==20);
-			}
-			
-			$TargetSites{$Gene}->{$RefSeq}->{'TargetSites'}=\@ValidTargetSites;	
+						
+			#Then search in the anstisense direction.
+			for(my $Position=($MaximalGuideLength+$PAMLength-1);$Position<length($SearchSequence)-($MaximalGuideLength+$PAMLength-1);$Position++) {
+				my $Guide=substr($SearchSequence,$Position,$GuideLength+$PAMLength);
+				if(substr($Guide,0,2) eq 'CC') {
+					
+					my $GuideSequence=substr($Guide,-$GuideLength);
+					$GuideSequence =~ tr/ACTG/TGAC/;
+					$GuideSequence = reverse($GuideSequence);
+					
+					if(substr($GuideSequence,0,1) eq 'G' || $GuideLength==20) {
+						my $ValidGuide={};
+						#Store position relative to TSS
+						my $GuidePosition=-$TSSUpstream+$Position-($MaximalGuideLength+$PAMLength-1);
+						$ValidGuide->{'Position'}=$GuidePosition;
+						$ValidGuide->{'GuideSequence'}=$GuideSequence;
+						$ValidGuide->{'Sense'}='Antisense';
+						$ValidGuide->{'GuideLength'}=$GuideLength;
+						$ValidGuide->{'Extra'}=0;
+						$ValidGuide->{'Extra'}=1 if(substr($GuideSequence,0,1) ne 'G');
+						push(@ValidGuides,$ValidGuide);
+					}
+				}
+			}				
 		}
+		$TargetSites{$Gene}->{$RefSeq}->{'TargetSites'}=\@ValidGuides;
 	}
 }
 
 #Output to file
 my $OutputFile=$InputFile . '.protospacers';
 open (OUT, ">", $OutputFile) or die "Cannot open outpufile\n";
+print OUT "Gene\tRefSeq\tChromosome\tTSS\tOrientation\tGuide Position\tGuide Sequence\tGuide sense\tGuide length\tGuide Extra\n";
 			
 foreach my $Gene (keys %TargetSites) {
 	foreach my $RefSeq (keys $TargetSites{$Gene}) {
-		foreach my $TargetSite (@{$TargetSites{$Gene}->{$RefSeq}->{'TargetSites'}}) {
-			unless ($TargetSite =~ /TTTTT/) {
+		my @TargetSitesOfRefSeq=@{$TargetSites{$Gene}->{$RefSeq}->{'TargetSites'}};
+		foreach my $TargetSiteOfRefSeq (sort {$a->{'Position'} <=> $b->{'Position'}} @TargetSitesOfRefSeq) {
+			unless ($TargetSiteOfRefSeq->{'GuideSequence'} =~ /TTTTT/) {
 				print OUT $Gene . "\t" . $RefSeq . "\t";
 				print OUT $TargetSites{$Gene}->{$RefSeq}->{'Chromosome'} . "\t";
-				print OUT $TargetSites{$Gene}->{$RefSeq}->{'TSS'} . "\t";
-				print OUT $TargetSites{$Gene}->{$RefSeq}->{'Orientation'} . "\t";
-				print OUT $TargetSite . "\n";
+				print OUT $TargetSites{$Gene}->{$RefSeq}->{'TSS'} . "\t";		
+				if($TargetSites{$Gene}->{$RefSeq}->{'Orientation'}) {
+					print OUT "+\t";
+				}
+				else {
+					print OUT "-\t";
+				} 		
+				print OUT $TargetSiteOfRefSeq->{'Position'} . "\t";
+				print OUT $TargetSiteOfRefSeq->{'GuideSequence'} . "\t";
+				print OUT $TargetSiteOfRefSeq->{'Sense'} . "\t";
+				print OUT $TargetSiteOfRefSeq->{'GuideLength'} . "\t";
+				print OUT $TargetSiteOfRefSeq->{'Extra'} . "\n";
 			}
 		}
 	}
 }
-
 close (OUT) or die "ERROR in $0: Cannot close outputfile\n";
