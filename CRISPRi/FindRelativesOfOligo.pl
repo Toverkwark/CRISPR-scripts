@@ -39,9 +39,9 @@ foreach my $Relative (keys $Relatives{$Depth}) {
 	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "AGG\n";
 	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "TGG\n";
 	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "CGG\n";
-	#print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "GAG\n";
-	#print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "AAG\n";
-	#print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "TAG\n";
-	#print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "CAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "GAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "AAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "TAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "CAG\n";
 }
 close (OUT) or die "ERROR in $0: Cannot close outputfile $OutputFile\n";

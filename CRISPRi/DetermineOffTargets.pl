@@ -66,7 +66,7 @@ close (IN) or die "ERROR in $0: Cannot close inputfile $InputFile\n";
 
 #Map all the relatives to the genome
 if ($ProcessRelatives) {
-	`~/data/genomestuff/bowtie2-2.1.0/bowtie2 ~/data/genomestuff/hg19-index/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a -S $RelativesMatchFile -p 7`;
+	`~/data/genomestuff/bowtie2-2.1.0/bowtie2 ~/data/genomestuff/hg19-index/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a -S $RelativesMatchFile -p 4`;
 	#Read in everything that was mapped
 	open (IN, $RelativesMatchFile) or die "ERROR in $0: Cannot open relatives match file $RelativesMatchFile\n";
 	while (defined(my $Line=<IN>)) {
