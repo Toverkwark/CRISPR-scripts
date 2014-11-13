@@ -41,7 +41,9 @@ my $Header=<IN>;
 chomp($Header);
 my $PotentialRelativesFile = $InputFile . ".PotentialRelatives";
 my $RelativesMatchFile = $InputFile . ".PotentialRelatives.matched";
+my $RunningLine=0;
 while (defined(my $Line=<IN>)) {
+	print "Running line " . ($RunningLine++) . " of input file\n";
 	chomp($Line);
 	my @LineValues = split( /\t/, $Line );
 	my $NumberOfColumns = (scalar @LineValues);
@@ -64,7 +66,7 @@ close (IN) or die "ERROR in $0: Cannot close inputfile $InputFile\n";
 
 #Map all the relatives to the genome
 if ($ProcessRelatives) {
-	`/media/Data/iKRUNC/bowtie2-2.1.0/bowtie2 /media/Data/iKRUNC/hg19-index/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a -S $RelativesMatchFile -p 3`;
+	`~/data/genomestuff/bowtie2-2.1.0/bowtie2 ~/data/genomestuff/hg19-index/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a -S $RelativesMatchFile -p 7`;
 	#Read in everything that was mapped
 	open (IN, $RelativesMatchFile) or die "ERROR in $0: Cannot open relatives match file $RelativesMatchFile\n";
 	while (defined(my $Line=<IN>)) {
