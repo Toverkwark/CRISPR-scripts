@@ -4,15 +4,15 @@ use Statistics::Basic qw(:all);
 use Term::ANSIColor;
 use strict;
 
-my $ControlColumn=5;
-my $TreatedColumn=9;
+my $ControlColumn=1;
+my $TreatedColumn=4;
 my $HorizontalPixels=666;
 my $VerticalPixels=500;
 my $PixelSize=1;
 my $MinimalX=0;
-my $MaximalX=10;
-my $MinimalY=-4;
-my $MaximalY=4;
+my $MaximalX=20;
+my $MinimalY=-10;
+my $MaximalY=10;
 
 print "Usage:perl $0 -input -output\n-input\tName of input file\n-output\tName of output file. Default is inputfile.svg\n";
 
@@ -92,7 +92,7 @@ print OUTPUT '<line x1="0" y1="' . $VerticalPixels . '" x2="' . $HorizontalPixel
 for (my $i=$MinimalY;$i<=$MaximalY;$i++) {
 	my $VerticalLevel=(-$i-$MinimalY)*$VerticalPixels/($MaximalY-$MinimalY);
 	print OUTPUT '<line x1="0" y1="' . $VerticalLevel . '" x2="' . $HorizontalPixels . '" y2="' . $VerticalLevel .'" stroke-width=".2" stroke="black" />ń';
-	print OUTPUT '<text font-family="Arial" x="' . 0.01*$HorizontalPixels . '" y="' . $VerticalLevel . '">' . $i . '</text>\n"';
+	print OUTPUT '<text font-family="Arial" font-size="10" x="' . 0.01*$HorizontalPixels . '" y="' . $VerticalLevel . '">' . $i . '</text>\n"';
 }
 
 #Create plot, write all the datapoints
