@@ -4,7 +4,7 @@ use strict;
 #use threads;
 #use threads::shared;
 #Uncomment next line in case running on the cluster
-#use lib "/home/NKI/b.evers/perl5/lib/perl5";
+use lib "/home/NKI/b.evers/perl5/lib/perl5";
 use Parallel::ForkManager;
 require "Damerau.pl";
 require "ProcessReads.pl";
@@ -16,7 +16,7 @@ print "Usage:perl $0 -input -output -report -library\n-input\tName of input file
 my $StartTime=time;
 
 #Define screen specific settings
-my $NumberOfThreads=3;
+my $NumberOfThreads=64;
 my $BarcodeOffset = 0; #Position of start of barcode
 my $BarcodeLength = 6; #Number of nucleotides that the barcode is long
 my $ExpectedInsertLength = 20; #Number of nucleotides of the insert between leading and trailing sequence
