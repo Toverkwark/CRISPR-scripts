@@ -18,6 +18,7 @@ perl DetermineOffTargets.pl -i $1.list.out.protospacers.unique.1.2.3 -d 4
 #Delete intermediate files
 rm $1.list
 rm $1.list.out
+rm $1.list.out.nonmatched
 rm $1.list.out.protospacers
 rm $1.list.out.protospacers.unique
 rm $1.list.out.protospacers.unique.1
