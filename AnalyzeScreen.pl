@@ -23,8 +23,8 @@ my $ExpectedInsertLength = 20; #Number of nucleotides of the insert between lead
 
 #Expected sequences, uncomment the relevant ones
 #For GECKO v2 Libraries:
-#my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
-#my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
+my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #For iKRUNC v1 Libraries:
 #my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 #my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
@@ -32,8 +32,8 @@ my $ExpectedInsertLength = 20; #Number of nucleotides of the insert between lead
 #my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 #my $ExpectedTrailingSequence = "GTTTAAGAGCTAGAAATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #For iKRUNC v2 long Libraries:
-my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
-my $ExpectedTrailingSequence = "GTTTAAGAGCTATGCTGGAAACAGCATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
+#my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+#my $ExpectedTrailingSequence = "GTTTAAGAGCTATGCTGGAAACAGCATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #For TRC Libraries (ALSO ADJUST EXPECTED INSERT LENGTH):
 #my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCGG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 #my $ExpectedTrailingSequence = "TTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
@@ -184,10 +184,10 @@ for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
 close(NOTANALYZED) or die "Could not close file $InputFile.notanalyzed\n";
 
 #Delete intermediate files
-for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
-	unlink($InputFile . "." . $Thread);
-	unlink($InputFile . "." . $Thread . ".tmp");
-}
+#for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
+#	unlink($InputFile . "." . $Thread);
+#	unlink($InputFile . "." . $Thread . ".tmp");
+#}
 
 #Print report of read filtering per barcode
 print "Writing filtering steps per barcode\n";
@@ -277,7 +277,7 @@ foreach my $Barcode (@Barcodes) {
 	print OUTPUT "\t$Barcode";
 }
 print OUTPUT "\n";
-foreach my $InsertSequence (sort {$Library{$a} cmp $Library{$b}} keys %Library) {
+foreach my $InsertSequence (keys %InsertCounts) {
 	print OUTPUT $Library{$InsertSequence} . "\t" . $InsertSequence;
 	foreach my $Barcode (@Barcodes) {
 		if($InsertCounts{$InsertSequence}->{$Barcode}) {

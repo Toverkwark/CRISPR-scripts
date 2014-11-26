@@ -12,7 +12,7 @@ sub ProcessReads($$$$$$$$$) {
 		
 	open( INPUT, $InputFile ) or die "ERROR in $0:Input file $InputFile is not accessible.\n";
 	
-	while ( defined( my $line = <INPUT> ) ) {
+	while ( defined( my $Sequence = <INPUT> ) ) {
 		my $BarcodeFound=0;
 		my $BarcodeFoundExact=0;
 		my $LeadingSequenceFound=0;
@@ -27,9 +27,7 @@ sub ProcessReads($$$$$$$$$) {
 		if ( !( $RecordsAnalyzed % 100 ) ) {
 			print "Analyzing record $RecordsAnalyzed of inputfile $InputFile\n";
 		}
-		my $Sequence = <INPUT>;
-		my $line3 = <INPUT>;
-		my $Qualities = <INPUT>;
+		my $Qualities = $Sequence;
 		chomp($Sequence);
 		chomp($Qualities);
 		#Get the barcode. See if it exists. If not, try to map it with maximally 1 nucleotide replacement and only 1 match existing.
@@ -163,22 +161,22 @@ sub ProcessReads($$$$$$$$$) {
  				$Results{$Barcode}->[4]++;
  				$Results{$Barcode}->[5]++ if ($TrailingSequenceFoundExact);
  			}
- 			
+ 			print $LeadingSequenceFound . "\t$TrailingSequenceFound\n";
  			if($LeadingSequenceFound && $TrailingSequenceFound) {
 				$InsertLengths{$InsertLength}++;
 				$Results{$Barcode}->[6]++;
 				$Results{$Barcode}->[9]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);
-				if($InsertLength==$ExpectedInsertLength) {
+				#if($InsertLength==$ExpectedInsertLength) {
 					$Results{$Barcode}->[7]++;
 					$Results{$Barcode}->[10]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);			
 					$InsertSequence=substr($Sequence,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)),$InsertLength);
-					if($$Library{$InsertSequence}) {
+					#if($$Library{$InsertSequence}) {
 						$Results{$Barcode}->[8]++;
 						$Results{$Barcode}->[11]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);
 						$InsertCounts{$InsertSequence}->{$Barcode}++;
 						$PerfectInsertCounts{$InsertSequence}->{$Barcode}++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);
-					}	
-				}
+					#}	
+				#}
 			}
 			else {
 				$NotAnalyzed=$NotAnalyzed . "$Sequence\n";
