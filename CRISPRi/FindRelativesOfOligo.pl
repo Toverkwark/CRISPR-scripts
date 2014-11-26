@@ -6,9 +6,12 @@ my %Relatives;
 
 getopt( 'oid', \%opts );
 die "ERROR in $0: No Outputfile given.\n" unless my $OutputFile = $opts{'o'};
-die "ERROR in $0: No Input sequence given.\n" unless my $SeedSequence = $opts{'i'};
+die "ERROR in $0: No Input sequence given.\n" unless my $OriginalSeedSequence = $opts{'i'};
+#Cap the search for off-target effects to the 20 most PAM proximal nt
+my $SeedSequence=substr($OriginalSeedSequence,-20);
 my $MaxDepth = $opts{'d'};
 open (OUT, ">>", $OutputFile) or die "Cannot open outputfile $OutputFile\n";
+
 
 #Create all possible distance relatives
 $Relatives{0}->{$SeedSequence}++;
@@ -35,13 +38,13 @@ for (my $Depth=1;$Depth<=$MaxDepth;$Depth++)
 }
 my $Depth=$MaxDepth;
 foreach my $Relative (keys $Relatives{$Depth}) {
-	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "GGG\n";
-	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "AGG\n";
-	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "TGG\n";
-	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "CGG\n";
-	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "GAG\n";
-	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "AAG\n";
-	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "TAG\n";
-	print OUT ">MM"  . $Depth . "_Relative_$SeedSequence\n$Relative" . "CAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$OriginalSeedSequence\n$Relative" . "GGG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$OriginalSeedSequence\n$Relative" . "AGG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$OriginalSeedSequence\n$Relative" . "TGG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$OriginalSeedSequence\n$Relative" . "CGG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$OriginalSeedSequence\n$Relative" . "GAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$OriginalSeedSequence\n$Relative" . "AAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$OriginalSeedSequence\n$Relative" . "TAG\n";
+	print OUT ">MM"  . $Depth . "_Relative_$OriginalSeedSequence\n$Relative" . "CAG\n";
 }
 close (OUT) or die "ERROR in $0: Cannot close outputfile $OutputFile\n";
