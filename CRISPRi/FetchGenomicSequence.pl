@@ -1,4 +1,6 @@
-require 'Settings.pl';
+use LocalSettings;
+my %LocalSettings=getconfig();
+my $HumanGenome=$LocalSettings{'HumanGenome'};
 sub FetchGenomicSequence($$$) {
 	my($Chromosome, $StartSite, $EndSite) = @_;
 	my $GenomicSequence;

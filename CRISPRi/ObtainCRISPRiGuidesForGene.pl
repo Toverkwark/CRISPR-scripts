@@ -2,7 +2,6 @@ use Getopt::Std;
 use warnings;
 use strict;
 require 'FetchGenomicSequence.pl';
-
 sub FetchGenomicSequence($$$);
 
 #Cas9 cuts here:
@@ -138,25 +137,7 @@ foreach my $Guide (keys %GuidesOfGene) {
 		#If a guide is present in more than one gene, find all the guides of this sequence and deselect them
 		foreach my $Gene (keys $GuidesOfGene{$Guide}) {
 			foreach my $RefSeq (keys $TargetSites{$Gene}) {
-				my @TargetSitesOfRefSeq#Preparing output structure
-my %OutputStructure;
-foreach my $Gene (keys %TargetSites) {
-	foreach my $RefSeq (keys $TargetSites{$Gene}) {
-		my @TargetSitesOfRefSeq=@{$TargetSites{$Gene}->{$RefSeq}->{'TargetSites'}};
-		foreach my $TargetSiteOfRefSeq (@TargetSitesOfRefSeq) {
-			if ($TargetSiteOfRefSeq->{'Selected'}) {
-				my $GuideSequence=$TargetSiteOfRefSeq->{'GuideSequence'};
-				push(@{$OutputStructure{$Gene}->{$GuideSequence}->{'RefSeqs'}}, $RefSeq);
-				push(@{$OutputStructure{$Gene}->{$GuideSequence}->{'TSSs'}}, $TargetSites{$RefSeq}->{'TSS'});
-				push(@{$OutputStructure{$Gene}->{$GuideSequence}->{'Orientation'}}, $TargetSites{$RefSeq}->{'Orientation'});
-				$OutputStructure{$Gene}->{$GuideSequence}->{'Position'}=$TargetSiteOfRefSeq->{'Position'};
-				$OutputStructure{$Gene}->{$GuideSequence}->{'Sense'}=$TargetSiteOfRefSeq->{'Sense'};
-				$OutputStructure{$Gene}->{$GuideSequence}->{'GuideLength'}=$TargetSiteOfRefSeq->{'GuideLength'};
-				$OutputStructure{$Gene}->{$GuideSequence}->{'Extra'}=$TargetSiteOfRefSeq->{'Extra'};
-			}
-		}
-	}
-}=@{$TargetSites{$Gene}->{$RefSeq}->{'TargetSites'}};
+				my @TargetSitesOfRefSeq=@{$TargetSites{$Gene}->{$RefSeq}->{'TargetSites'}};
 				foreach my $TargetSiteOfRefSeq (@TargetSitesOfRefSeq) {
 					$TargetSiteOfRefSeq->{'Selected'}=0 if($Guide eq $TargetSiteOfRefSeq->{'GuideSequence'});
 				}

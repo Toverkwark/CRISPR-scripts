@@ -9,19 +9,22 @@ perl ObtainCRISPRiGuidesForGene.pl -i $1.list.out
 #Determine which of these target unique genes in the genome:
 perl IdentifyUniqueTargetSites.pl -i $1.list.out.protospacers 
 
+#Restructure file
+perl RestructureGuideFile.pl -i $1.list.out.protospacers.unique
+
 #Determine off target effects:
-perl DetermineOffTargets.pl -i $1.list.out.protospacers.unique -d 1 -l
-perl DetermineOffTargets.pl -i $1.list.out.protospacers.unique.1 -d 2
-perl DetermineOffTargets.pl -i $1.list.out.protospacers.unique.1.2 -d 3
-perl DetermineOffTargets.pl -i $1.list.out.protospacers.unique.1.2.3 -d 4
+perl DetermineOffTargets.pl -i $1.list.out.protospacers.unique.restructured -d 1 -l
+perl DetermineOffTargets.pl -i $1.list.out.protospacers.unique.restructured.1 -d 2
+perl DetermineOffTargets.pl -i $1.list.out.protospacers.unique.restructured.1.2 -d 3
+perl DetermineOffTargets.pl -i $1.list.out.protospacers.unique.restructured.1.2.3 -d 4
 
 #Delete intermediate files
 rm $1.list
 rm $1.list.out
-rm $1.list.out.nonmatched
+rm $1.list.nonmatched
 rm $1.list.out.protospacers
 rm $1.list.out.protospacers.unique
-rm $1.list.out.protospacers.unique.1
-rm $1.list.out.protospacers.unique.1.2
-rm $1.list.out.protospacers.unique.1.2.3
-
+rm $1.list.out.protospacers.unique.restructured.1
+rm $1.list.out.protospacers.unique.restructured.1.2
+rm $1.list.out.protospacers.unique.restructured.1.2.3
+rm $1.list.out.protospacers.unique.restructured

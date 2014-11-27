@@ -1,6 +1,10 @@
 use Getopt::Std;
 use warnings;
 use strict;
+use LocalSettings;
+my %LocalSettings=getconfig();
+my $Bowtie=$LocalSettings{'Bowtie'};
+my $IndexedHumanGenome=$LocalSettings{'IndexedHumanGenome'};
 print "Usage:perl $0 -i InputFile [-o OutputFile (default:InputFile.{degree})] -d Degree of off-targets to look for [-l flag:Skip looking at the results of the previous degree]\n";
 
 my %opts;
@@ -43,14 +47,14 @@ my $PotentialRelativesFile = $InputFile . ".PotentialRelatives";
 my $RelativesMatchFile = $InputFile . ".PotentialRelatives.matched";
 my $RunningLine=0;
 while (defined(my $Line=<IN>)) {
-	print "Running line " . ($RunningLine++) . " of input file\n";
+#	print "Running line " . ($RunningLine++) . " of input file\n";
 	chomp($Line);
 	my @LineValues = split( /\t/, $Line );
 	my $NumberOfColumns = (scalar @LineValues);
-	my $TargetSequence = $LineValues[6];
+	my $TargetSequence = $LineValues[1];
 	$OutputText{$TargetSequence}=$Line;
 	my $FoundInPreviousRun = 0;
-	if ($NumberOfColumns>=11) {
+	if ($NumberOfColumns>=12) {
 		$FoundInPreviousRun = $LineValues[$NumberOfColumns - 2];
 	}
 	$RelativesFound{$TargetSequence} = -1;
@@ -66,7 +70,7 @@ close (IN) or die "ERROR in $0: Cannot close inputfile $InputFile\n";
 
 #Map all the relatives to the genome
 if ($ProcessRelatives) {
-	`/media/Data/iKRUNC/bowtie2-2.1.0/bowtie2 /media/Data/iKRUNC/hg19-index/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a -S $RelativesMatchFile -p 4`;
+	`$Bowtie $IndexedHumanGenome/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a -S $RelativesMatchFile -p 4`;
 	#Read in everything that was mapped
 	open (IN, $RelativesMatchFile) or die "ERROR in $0: Cannot open relatives match file $RelativesMatchFile\n";
 	while (defined(my $Line=<IN>)) {
@@ -104,8 +108,8 @@ while (defined(my $Line = <IN>)) {
 	chomp($Line);
 	my @LineValues = split( /\t/, $Line );
 	print OUT $Line . "\t";
-	print OUT $RelativesFound{$LineValues[6]} . "\t";
-	print OUT $NearGeneRelativesFound{$LineValues[6]} . "\n";
+	print OUT $RelativesFound{$LineValues[1]} . "\t";
+	print OUT $NearGeneRelativesFound{$LineValues[1]} . "\n";
 }
 close (OUT) or die "ERROR in $0: Cannot close outputfile $OutputFile\n";
 close (IN) or die "ERROR in $0: Cannot close inputfile $InputFile\n";
