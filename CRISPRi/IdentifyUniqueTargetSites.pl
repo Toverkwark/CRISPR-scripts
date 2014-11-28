@@ -1,7 +1,10 @@
 use Getopt::Std;
 use warnings;
 use strict;
-
+use LocalSettings;
+my %LocalSettings=getconfig();
+my $Bowtie=$LocalSettings{'Bowtie'};
+my $IndexedHumanGenome=$LocalSettings{'IndexedHumanGenome'};
 my %opts;
 my %InputGuides;
 my %Guides;
@@ -35,7 +38,7 @@ close (TEMPOUTPUT) or die "ERROR in $0: Cannot close tmp file $InputFile.tmp\n";
 
 
 #Search the genome for occurrences of these guides
-`/media/Data/iKRUNC/bowtie2-2.1.0/bowtie2 /media/Data/iKRUNC/hg19-index/hg19 -r $InputFile.tmp -t -S $InputFile.tmp.matched --no-hd --score-min L,-5,0 -k 2`;
+`$Bowtie $IndexedHumanGenome/hg19 -r $InputFile.tmp -t -S $InputFile.tmp.matched --no-hd --score-min L,-5,0 -k 2`;
 
 #Parse the resulting file and count occurrences for every guides
 open (IN, $InputFile . ".tmp.matched") or die "ERROR in $0: Cannot open temp file for guide parsing\n";

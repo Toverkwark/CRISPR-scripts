@@ -2,7 +2,6 @@ use Getopt::Std;
 use warnings;
 use strict;
 require 'FetchGenomicSequence.pl';
-
 sub FetchGenomicSequence($$$);
 
 #Cas9 cuts here:
@@ -129,7 +128,7 @@ foreach my $Gene (keys %TargetSites) {
 		foreach my $TargetSiteOfRefSeq (@TargetSitesOfRefSeq) {
 			#Filter out guides that have 4 Ts in a row as this may result in premature transcriptional termination
 			$TargetSiteOfRefSeq->{'Selected'} = 0 if($TargetSiteOfRefSeq->{'GuideSequence'} =~ /TTTT/);
-			$GuidesOfGene{$TargetSiteOfRefSeq}->{'GuideSequence'}->{$Gene}=1;						
+			$GuidesOfGene{$TargetSiteOfRefSeq}->{$Gene}=1;						
 		}
 	}
 }
