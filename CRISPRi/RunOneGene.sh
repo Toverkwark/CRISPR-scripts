@@ -1,7 +1,7 @@
 #!/bin/sh
 #Make a list of genes (list) and run in through the refseq finder:
 echo $1 >$1.list
-perl ConvertGeneSymbolsToRefSeqIDs.pl -l $1.list
+perl ConvertGeneSymbolsToEnsemblIDs.pl -l $1.list
 
 #Then, create a list of all possible CRISPRi guides:
 perl ObtainCRISPRiGuidesForGene.pl -i $1.list.out 

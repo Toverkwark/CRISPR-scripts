@@ -1,0 +1,9 @@
+To select the best CRISPRs against any gene, do the following:
+
+-Initially, only look at CRISPRs with no 1MM off-target effects. Only look at 20nt CRISPRs.
+-For every transcript, try to select 5 gRNAs that are between +25 and +100 of their TSS.
+-If more are present, take those with the least # of expected off-target effects
+-Choose gRNAs up to 10 without TSS proximity restrictions, taking those with the least # of expected off-target effects
+-Consolidate multiple occurring gRNAs
+-If there are more than 18 gRNAs targeting a gene, perform at least 3 picking rounds starting from the top of the list of every transcript. If <18 gRNAs result, continue until reaching 18 gRNAs.
+-If <10 gRNAs are found for a gene, redo the whole procedure also including 1MM off-target gRNAs and add them from top to bottom until 10 are reached.

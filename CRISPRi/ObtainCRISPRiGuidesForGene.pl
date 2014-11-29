@@ -26,35 +26,33 @@ while (defined (my $Line=<IN>)) {
 	chomp($Line);
 	my @LineValues=split(/\t/,$Line);
 	my $Gene=$LineValues[0];
-	my $RefSeq=$LineValues[1];
-	if(substr($RefSeq,0,2) eq 'NM') {
-		my $RefSeqInfo = `grep -P "$RefSeq\t" ../refseq/hg19.txt`;
-		die "ERROR in $0: RefSeq $RefSeq cannot be found in the database.\n" if !$RefSeqInfo;
-		my @RefSeqValues = split( /\t/, $RefSeqInfo );
-		my $Chromosome = substr( $RefSeqValues[2], 3 );
-		#The refGene.txt file uses zero based chromosomal locations for the start sites
-		my $GeneStart;
-		my $GeneEnd;
-		my $Sequence;
-		my $Orientation = 0;
-		if($RefSeqValues[3] eq '+') {
-			$Orientation = 1;
-			$GeneStart    = $RefSeqValues[4]+1;
-			$GeneEnd      = $RefSeqValues[5];
-			$Sequence=FetchGenomicSequence($Chromosome,$GeneStart-$MaximalGuideLength-$PAMLength-$TSSUpstream+1,$GeneStart+$MaximalGuideLength+$PAMLength+$TSSDownstream-1) . "\n";
-		}
-		else {
-			$GeneStart    = $RefSeqValues[5];
-			$GeneEnd      = $RefSeqValues[4]+1;
-			$Sequence=FetchGenomicSequence($Chromosome,$GeneStart-$MaximalGuideLength-$PAMLength-$TSSDownstream+1,$GeneStart+$MaximalGuideLength+$PAMLength+$TSSUpstream-1) . "\n";
-			$Sequence =~ tr/ACTG/TGAC/;
-			$Sequence = reverse($Sequence);
-		}
-		$TargetSites{$Gene}->{$RefSeq}->{'Sequence'}=$Sequence;
-		$TargetSites{$Gene}->{$RefSeq}->{'TSS'}=$GeneStart;
-		$TargetSites{$Gene}->{$RefSeq}->{'Orientation'}=$Orientation;
-		$TargetSites{$Gene}->{$RefSeq}->{'Chromosome'}=$Chromosome;
+	my $TranscriptID=$LineValues[1];
+	my $EnsemblInfo = `grep -P "$TranscriptID\t" ../refseq/ensGene.txt`;
+	die "ERROR in $0: Transcript ID $TranscriptID cannot be found in the database.\n" if !$EnsemblInfo;
+	my @TranscriptValues = split( /\t/, $EnsemblInfo );
+	my $Chromosome = substr( $TranscriptValues[2], 3 );
+	#The refGene.txt file uses zero based chromosomal locations for the start sites
+	my $GeneStart;
+	my $GeneEnd;
+	my $Sequence;
+	my $Orientation = 0;
+	if($TranscriptValues[3] eq '+') {
+		$Orientation = 1;
+		$GeneStart    = $TranscriptValues[4]+1;
+		$GeneEnd      = $TranscriptValues[5];
+		$Sequence=FetchGenomicSequence($Chromosome,$GeneStart-$MaximalGuideLength-$PAMLength-$TSSUpstream+1,$GeneStart+$MaximalGuideLength+$PAMLength+$TSSDownstream-1) . "\n";
 	}
+	else {
+		$GeneStart    = $TranscriptValues[5];
+		$GeneEnd      = $TranscriptValues[4]+1;
+		$Sequence=FetchGenomicSequence($Chromosome,$GeneStart-$MaximalGuideLength-$PAMLength-$TSSDownstream+1,$GeneStart+$MaximalGuideLength+$PAMLength+$TSSUpstream-1) . "\n";
+		$Sequence =~ tr/ACTG/TGAC/;
+		$Sequence = reverse($Sequence);
+	}
+	$TargetSites{$Gene}->{$TranscriptID}->{'Sequence'}=$Sequence;
+	$TargetSites{$Gene}->{$TranscriptID}->{'TSS'}=$GeneStart;
+	$TargetSites{$Gene}->{$TranscriptID}->{'Orientation'}=$Orientation;
+	$TargetSites{$Gene}->{$TranscriptID}->{'Chromosome'}=$Chromosome;
 }
 close(IN) or die "Could not close inputfile\n";
 	
@@ -62,10 +60,10 @@ close(IN) or die "Could not close inputfile\n";
 print "Identifying valid protospacers\n";
 foreach my $Gene (keys %TargetSites) {
 #	print "Working on gene $Gene\n";
-	foreach my $RefSeq (keys $TargetSites{$Gene}) {
+	foreach my $TranscriptID (keys $TargetSites{$Gene}) {
 		my @ValidGuides;
 #		print "\tRefSeq $RefSeq\n";
-		my $SearchSequence = $TargetSites{$Gene}->{$RefSeq}->{'Sequence'};
+		my $SearchSequence = $TargetSites{$Gene}->{$TranscriptID}->{'Sequence'};
 		#Loop over guide length in search of guides
 		for(my $GuideLength=$MinimalGuideLength;$GuideLength<=$MaximalGuideLength;$GuideLength++) {
 			#First search in the sense direction
@@ -114,7 +112,7 @@ foreach my $Gene (keys %TargetSites) {
 				}
 			}				
 		}
-		$TargetSites{$Gene}->{$RefSeq}->{'TargetSites'}=\@ValidGuides;
+		$TargetSites{$Gene}->{$TranscriptID}->{'TargetSites'}=\@ValidGuides;
 	}
 }
 
@@ -123,8 +121,8 @@ my %GuidesOfGene;
 print "Protospacer filtering\n";
 foreach my $Gene (keys %TargetSites) {
 #	print "Working on gene $Gene\n";
-	foreach my $RefSeq (keys $TargetSites{$Gene}) {
-		my @TargetSitesOfRefSeq=@{$TargetSites{$Gene}->{$RefSeq}->{'TargetSites'}};
+	foreach my $TranscriptID (keys $TargetSites{$Gene}) {
+		my @TargetSitesOfRefSeq=@{$TargetSites{$Gene}->{$TranscriptID}->{'TargetSites'}};
 		foreach my $TargetSiteOfRefSeq (@TargetSitesOfRefSeq) {
 			#Filter out guides that have 4 Ts in a row as this may result in premature transcriptional termination
 			$TargetSiteOfRefSeq->{'Selected'} = 0 if($TargetSiteOfRefSeq->{'GuideSequence'} =~ /TTTT/);
@@ -136,8 +134,8 @@ foreach my $Guide (keys %GuidesOfGene) {
 	if(keys $GuidesOfGene{$Guide} > 1) {
 		#If a guide is present in more than one gene, find all the guides of this sequence and deselect them
 		foreach my $Gene (keys $GuidesOfGene{$Guide}) {
-			foreach my $RefSeq (keys $TargetSites{$Gene}) {
-				my @TargetSitesOfRefSeq=@{$TargetSites{$Gene}->{$RefSeq}->{'TargetSites'}};
+			foreach my $TranscriptID (keys $TargetSites{$Gene}) {
+				my @TargetSitesOfRefSeq=@{$TargetSites{$Gene}->{$TranscriptID}->{'TargetSites'}};
 				foreach my $TargetSiteOfRefSeq (@TargetSitesOfRefSeq) {
 					$TargetSiteOfRefSeq->{'Selected'}=0 if($Guide eq $TargetSiteOfRefSeq->{'GuideSequence'});
 				}
@@ -153,14 +151,14 @@ open (OUT, ">", $OutputFile) or die "Cannot open outpufile\n";
 print OUT "Gene\tRefSeq\tChromosome\tTSS\tOrientation\tGuide Position\tGuide Sequence\tGuide sense\tGuide length\tGuide Extra\n";
 			
 foreach my $Gene (keys %TargetSites) {
-	foreach my $RefSeq (keys $TargetSites{$Gene}) {
-		my @TargetSitesOfRefSeq=@{$TargetSites{$Gene}->{$RefSeq}->{'TargetSites'}};
+	foreach my $TranscriptID (keys $TargetSites{$Gene}) {
+		my @TargetSitesOfRefSeq=@{$TargetSites{$Gene}->{$TranscriptID}->{'TargetSites'}};
 		foreach my $TargetSiteOfRefSeq (sort {$a->{'Position'} <=> $b->{'Position'}} @TargetSitesOfRefSeq) {
 			if ($TargetSiteOfRefSeq->{'Selected'}) {
-				print OUT $Gene . "\t" . $RefSeq . "\t";
-				print OUT $TargetSites{$Gene}->{$RefSeq}->{'Chromosome'} . "\t";
-				print OUT $TargetSites{$Gene}->{$RefSeq}->{'TSS'} . "\t";		
-				if($TargetSites{$Gene}->{$RefSeq}->{'Orientation'}) {
+				print OUT $Gene . "\t" . $TranscriptID . "\t";
+				print OUT $TargetSites{$Gene}->{$TranscriptID}->{'Chromosome'} . "\t";
+				print OUT $TargetSites{$Gene}->{$TranscriptID}->{'TSS'} . "\t";		
+				if($TargetSites{$Gene}->{$TranscriptID}->{'Orientation'}) {
 					print OUT "+\t";
 				}
 				else {
