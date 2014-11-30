@@ -18,6 +18,9 @@ perl DetermineOffTargets.pl -i $1.list.out.protospacers.unique.restructured.1 -d
 perl DetermineOffTargets.pl -i $1.list.out.protospacers.unique.restructured.1.2 -d 3
 perl DetermineOffTargets.pl -i $1.list.out.protospacers.unique.restructured.1.2.3 -d 4
 
+#Filter and select
+perl FilterAndSelectGuides.pl -i $1.list.out.protospacers.unique.restructured.1.2.3.4
+
 #Delete intermediate files
 rm $1.list
 rm $1.list.out

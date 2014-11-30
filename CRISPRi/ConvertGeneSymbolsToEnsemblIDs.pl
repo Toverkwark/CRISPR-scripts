@@ -1,7 +1,6 @@
 use warnings;
 use strict;
 use Getopt::Std;
-my $EnsemblFile = "../refseq/hg19.txt";
 my $ApprisFile = "../refseq/appris_data.principal.txt";
 
 #Import script options
