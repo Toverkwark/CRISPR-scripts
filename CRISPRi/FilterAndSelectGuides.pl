@@ -12,6 +12,7 @@ open(IN, my $InputFile=$opts{'i'}) or die "ERROR in $0:Could not open inputfile\
 
 #Read header
 my $Header=<IN>;
+chomp($Header);
 
 #Loop over all guides in inputfile and place all potential guides in a hash
 while (defined (my $Line=<IN>)) {
@@ -56,26 +57,37 @@ while (defined (my $Line=<IN>)) {
 #Select max 10 and move on to next transcript
 foreach my $Gene (keys %PotentialGuides) {
 	foreach my $Transcript (keys $PotentialGuides{$Gene}) {
-		foreach my $GuideSequence (sort {$PotentialGuides{$Gene}->{$Transcript}->{$b}->{'Score'} <=> $PotentialGuides{$Gene}->{$Transcript}->{$a}->{'Score'}} keys $PotentialGuides{$Gene}->{$Transcript}) {
-			if ($PotentialGuides{$Gene}->{$Transcript}->{$GuideSequence}->{'GuideLength'}==20 && $PotentialGuides{$Gene}->{$Transcript}->{$GuideSequence}->{'OffTargets'}->[0]==0) {
-				#Push this particular guide into the selected guides of all transcripts it targets close, unless it's already there
-				my @TargetedTranscripts=split(/,/,$GuidesPerGene{$Gene}->{$GuideSequence}->{'LineValues'}->[6]);
-				my @TargetedPositions=split(/,/,$GuidesPerGene{$Gene}->{$GuideSequence}->{'LineValues'}->[8]);
-				foreach (@TargetedTranscripts) {
-					#This line adds the guide to the selected guides of the current transcript or to the selected guides of any other transcripts it targets close (i.e. of which the score is >=100)
-					#it also only adds it if it's not already there
-					if ($_ eq $Transcript || $PotentialGuides{$Gene}->{$_}->{$GuideSequence}->{'Score'} >=100) {
-						push(@{$SelectedGuides{$Gene}->{$_}->{'Guides'}},$GuideSequence) unless ($GuideSequence ~~ @{$SelectedGuides{$Gene}->{$_}->{'Guides'}});
-					}	
+		my $IncludePromiscuousGuides=0;
+		#Run the loop twice, one to search for guides without 1MM mismatches and then if necessary again to include those
+		for(my $i=0;$i<2;$i++) {
+			foreach my $GuideSequence (sort {$PotentialGuides{$Gene}->{$Transcript}->{$b}->{'Score'} <=> $PotentialGuides{$Gene}->{$Transcript}->{$a}->{'Score'}} keys $PotentialGuides{$Gene}->{$Transcript}) {
+				if ($PotentialGuides{$Gene}->{$Transcript}->{$GuideSequence}->{'GuideLength'}==20) {
+					if ($IncludePromiscuousGuides || $PotentialGuides{$Gene}->{$Transcript}->{$GuideSequence}->{'OffTargets'}->[0]==0) {
+						#Push this particular guide into the selected guides of all transcripts it targets close, unless it's already there
+						my @TargetedTranscripts=split(/,/,$GuidesPerGene{$Gene}->{$GuideSequence}->{'LineValues'}->[6]);
+						my @TargetedPositions=split(/,/,$GuidesPerGene{$Gene}->{$GuideSequence}->{'LineValues'}->[8]);
+						foreach (@TargetedTranscripts) {
+							#This line adds the guide to the selected guides of the current transcript or to the selected guides of any other transcripts it targets close (i.e. of which the score is >=100)
+							#it also only adds it if it's not already there
+							if ($_ eq $Transcript || $PotentialGuides{$Gene}->{$_}->{$GuideSequence}->{'Score'} >=100) {
+								push(@{$SelectedGuides{$Gene}->{$_}->{'Guides'}},$GuideSequence) unless ($GuideSequence ~~ @{$SelectedGuides{$Gene}->{$_}->{'Guides'}});
+							}	
+						}
+						#Stop selecting guides if 10 are reached
+						last if (@{$SelectedGuides{$Gene}->{$Transcript}->{'Guides'}}>=10);
+					}
 				}
-				#Stop selecting guides if 10 are reached
-				last if (@{$SelectedGuides{$Gene}->{$Transcript}->{'Guides'}}>=10);
+			}
+			if (@{$SelectedGuides{$Gene}->{$Transcript}->{'Guides'}}<10) {
+				$IncludePromiscuousGuides=1;
+			} 
+			else {
+				#In case we already reached 10 guides for this transcript, make sure it doesn't loop into finding the same ones again
+				$i++;
 			}
 		}
 	}
 }
-
-#TODO: Repeat this loop to select for extra guides which have 1MM off-targets in case less than 10 are reached for any transcript
 
 #TODO: Subselect guides in case any gene has more than a certain number of guides selected
 
