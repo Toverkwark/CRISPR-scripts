@@ -28,7 +28,7 @@ while (defined (my $Line=<IN>)) {
 	my $Gene=$LineValues[0];
 	my $TranscriptID=$LineValues[1];
 	my $EnsemblInfo = `grep -P "$TranscriptID\t" ../refseq/ensGene.txt`;
-	die "ERROR in $0: Transcript ID $TranscriptID cannot be found in the database.\n" if !$EnsemblInfo;
+	next if !$EnsemblInfo;
 	my @TranscriptValues = split( /\t/, $EnsemblInfo );
 	my $Chromosome = substr( $TranscriptValues[2], 3 );
 	#The refGene.txt file uses zero based chromosomal locations for the start sites
