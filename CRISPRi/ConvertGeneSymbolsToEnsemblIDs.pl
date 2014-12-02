@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 use Getopt::Std;
-my $ApprisFile = "../refseq/appris_data.principal.txt";
+my $ApprisFile = "../refseq/appris_data.principal_hg19.txt";
 
 #Import script options
 my %ScriptOptions;
