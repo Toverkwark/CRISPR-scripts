@@ -17,7 +17,7 @@ open( IN, $GeneSymbolList ) or die "Could not open input file $GeneSymbolList\n"
 while ( defined(my $GeneSymbol = <IN> )) {
 	chomp($GeneSymbol);
 	print "Found gene symbol $GeneSymbol, finding transcript IDs\n";
-	my @Transcripts=`grep -P "$GeneSymbol\t" $ApprisFile`;
+	my @Transcripts=`grep -P "^$GeneSymbol\t" $ApprisFile`;
 		if ( @Transcripts ) {
 		foreach (@Transcripts) {
 			my @TranscriptIDs=split(/\t/,$_);
