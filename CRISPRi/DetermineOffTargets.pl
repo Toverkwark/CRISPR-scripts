@@ -5,6 +5,7 @@ use LocalSettings;
 my %LocalSettings=getconfig();
 my $Bowtie=$LocalSettings{'Bowtie'};
 my $IndexedHumanGenome=$LocalSettings{'IndexedHumanGenome'};
+my $NumberOfCoresToUse=$LocalSettings{'NumberOfCoresToUse'};
 print "Usage:perl $0 -i InputFile [-o OutputFile (default:InputFile.{degree})] -d Degree of off-targets to look for [-l flag:Skip looking at the results of the previous degree]\n";
 
 my %opts;
@@ -70,7 +71,7 @@ close (IN) or die "ERROR in $0: Cannot close inputfile $InputFile\n";
 
 #Map all the relatives to the genome
 if ($ProcessRelatives) {
-	`$Bowtie $IndexedHumanGenome/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a -S $RelativesMatchFile -p 4`;
+	`$Bowtie $IndexedHumanGenome/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a -S $RelativesMatchFile -p $NumberOfCoresToUse`;
 	#Read in everything that was mapped
 	open (IN, $RelativesMatchFile) or die "ERROR in $0: Cannot open relatives match file $RelativesMatchFile\n";
 	while (defined(my $Line=<IN>)) {
