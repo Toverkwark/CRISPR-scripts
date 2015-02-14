@@ -1,3 +1,4 @@
+use lib '..';
 use LocalSettings;
 my %LocalSettings=getconfig();
 my $HumanGenome=$LocalSettings{'HumanGenome'};

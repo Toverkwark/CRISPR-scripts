@@ -9,7 +9,6 @@ my %SelectedGuides;
 getopt( 'i', \%opts );
 open(IN, my $InputFile=$opts{'i'}) or die "ERROR in $0:Could not open inputfile\n";
 
-
 #Read header
 my $Header=<IN>;
 chomp($Header);

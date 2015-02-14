@@ -1,5 +1,5 @@
 #!/bin/sh
-#Make a list of genes (list) and run in through the refseq finder:
+#Make a list of genes (list) and run in through the ensembl ID finder:
 echo $1 >$1.list
 perl ConvertGeneSymbolsToEnsemblIDs.pl -l $1.list
 

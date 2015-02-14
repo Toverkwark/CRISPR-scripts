@@ -1,6 +1,7 @@
 use Getopt::Std;
 use warnings;
 use strict;
+use lib '..';
 use LocalSettings;
 my %LocalSettings=getconfig();
 my $Bowtie=$LocalSettings{'Bowtie'};
@@ -16,7 +17,7 @@ my %GenePositions;
 my $ProcessRelatives = 0;
 my $AdditionalIdenticalTargetsFound;
 my $Margin = 300;
-my $RefSeqFile = '../refseq/hg19.txt';
+my $RefSeqFile = '../GenomeInfo/hg19.txt';
 
 #Parse command parameters
 getopt( 'oidl', \%opts );

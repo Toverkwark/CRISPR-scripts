@@ -1,6 +1,7 @@
 use Getopt::Std;
 use warnings;
 use strict;
+use lib '..';
 use LocalSettings;
 my %LocalSettings=getconfig();
 my $Bowtie=$LocalSettings{'Bowtie'};

@@ -27,7 +27,7 @@ while (defined (my $Line=<IN>)) {
 	my @LineValues=split(/\t/,$Line);
 	my $Gene=$LineValues[0];
 	my $TranscriptID=$LineValues[1];
-	my $EnsemblInfo = `grep -P "$TranscriptID\t" ../refseq/ensGene.txt`;
+	my $EnsemblInfo = `grep -P "$TranscriptID\t" ../GenomeInfo/ensGene.txt`;
 	next if !$EnsemblInfo;
 	my @TranscriptValues = split( /\t/, $EnsemblInfo );
 	my $Chromosome = substr( $TranscriptValues[2], 3 );

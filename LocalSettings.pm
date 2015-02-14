@@ -4,7 +4,7 @@ use strict;
 our @ISA=qw(Exporter);
 our @EXPORT=qw(getconfig);
 my %confighash;
-my $Location='Work';
+my $Location='Home';
 if($Location eq 'Home') {
 	%confighash=(
 		"NumberOfCoresToUse" => "7",
