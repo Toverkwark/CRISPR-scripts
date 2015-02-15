@@ -3,8 +3,8 @@ use Term::ANSIColor;
 use strict;
 #use threads;
 #use threads::shared;
-#Uncomment next line in case running on the cluster
-use lib "/home/NKI/b.evers/perl5/lib/perl5";
+use lib '..';
+use LocalSettings;
 use Parallel::ForkManager;
 require "Damerau.pl";
 require "ProcessReads.pl";
@@ -26,8 +26,8 @@ my $ExpectedInsertLength = 20; #Number of nucleotides of the insert between lead
 #my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 #my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #For iKRUNC v1 Libraries:
-#my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
-#my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
+my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #For iKRUNC v2 short Libraries:
 #my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 #my $ExpectedTrailingSequence = "GTTTAAGAGCTAGAAATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
@@ -35,8 +35,8 @@ my $ExpectedInsertLength = 20; #Number of nucleotides of the insert between lead
 #my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 #my $ExpectedTrailingSequence = "GTTTAAGAGCTATGCTGGAAACAGCATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #For TRC Libraries (ALSO ADJUST EXPECTED INSERT LENGTH):
-my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCGG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
-my $ExpectedTrailingSequence = "TTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
+#my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCGG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+#my $ExpectedTrailingSequence = "TTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #$ExpectedInsertLength=21+6+21;
 
 my $ErrorThresholdLeading = 20; #This number of mutations or indels can be present in the leading  sequences
@@ -278,7 +278,8 @@ foreach my $Barcode (@Barcodes) {
 }
 print OUTPUT "\n";
 foreach my $InsertSequence (sort {$Library{$a} cmp $Library{$b}} keys %Library) {
-	print OUTPUT $Library{$InsertSequence} . "\t" . $InsertSequence;
+	my $LibraryGene=substr($Library{$InsertSequence},0,index($Library{$InsertSequence},'-'));
+	print OUTPUT $Library{$InsertSequence} . "\t" . $LibraryGene;
 	foreach my $Barcode (@Barcodes) {
 		if($InsertCounts{$InsertSequence}->{$Barcode}) {
 			print OUTPUT "\t" . $InsertCounts{$InsertSequence}->{$Barcode};	
@@ -298,7 +299,8 @@ foreach my $Barcode (@Barcodes) {
 }
 print PERFECTOUTPUT "\n";
 foreach my $InsertSequence (sort {$Library{$a} cmp $Library{$b}} keys %Library) {
-	print PERFECTOUTPUT $Library{$InsertSequence} . "\t" . $InsertSequence;
+	my $LibraryGene=substr($Library{$InsertSequence},0,index($Library{$InsertSequence},'-'));
+	print PERFECTOUTPUT $Library{$InsertSequence} . "\t" . $LibraryGene;
 	foreach my $Barcode (@Barcodes) {
 		if($PerfectInsertCounts{$InsertSequence}->{$Barcode}) {
 			print PERFECTOUTPUT "\t" . $PerfectInsertCounts{$InsertSequence}->{$Barcode};	

@@ -15,6 +15,7 @@ if($Location eq 'Home') {
 }
 else {
 	if($Location eq 'Work') {
+		use lib "/home/NKI/b.evers/perl5/lib/perl5";
 		%confighash=(
 			"NumberOfCoresToUse" => "3",	
 			"Bowtie" => "/media/Data/iKRUNC/bowtie2-2.1.0/bowtie2",
