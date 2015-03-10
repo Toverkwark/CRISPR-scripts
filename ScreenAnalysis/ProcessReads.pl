@@ -48,6 +48,7 @@ sub ProcessReads($$$$$$$$$) {
 
 		#Only continue to analyze this read if a valid barcode has been found
 		if($BarcodeFound) {	
+
 			#Try to find the leading sequence and record any mistakes there. Determine an offset in case it is found		
 			my $LeadingOffset = 0;
 			my %DamerauResults;
@@ -82,7 +83,7 @@ sub ProcessReads($$$$$$$$$) {
 					}
 				}		
 			}
-			
+
 			if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdLeading) {
 				$LeadingSequenceFound=1;
 				#Store errors in leader sequence
@@ -163,7 +164,7 @@ sub ProcessReads($$$$$$$$$) {
  				$Results{$Barcode}->[4]++;
  				$Results{$Barcode}->[5]++ if ($TrailingSequenceFoundExact);
  			}
- 			
+			
  			if($LeadingSequenceFound && $TrailingSequenceFound) {
 				$InsertLengths{$InsertLength}++;
 				$Results{$Barcode}->[6]++;
@@ -185,6 +186,7 @@ sub ProcessReads($$$$$$$$$) {
 			}
 		}			
 	}
+
 	close(INPUT)  or die "Could not close input file $InputFile.\n";
 	
 	#Write tmp output to output file
@@ -242,6 +244,7 @@ sub ProcessReads($$$$$$$$$) {
 	print OUTPUT "***NOT ANALYZED***\n";
 	print OUTPUT $NotAnalyzed;
 	close(OUTPUT) or die "Could not close outputfile " . ($InputFile . ".tmp") . "\n";
+
 	return();
 }
 

@@ -16,14 +16,14 @@ print "Usage:perl $0 -input -output -report -library\n-input\tName of input file
 my $StartTime=time;
 
 #Define screen specific settings
-my $NumberOfThreads=8;
+my $NumberOfThreads=64;
 my $BarcodeOffset = 0; #Position of start of barcode
 my $BarcodeLength = 6; #Number of nucleotides that the barcode is long
 my $ExpectedInsertLength = 10; #Number of nucleotides of the insert between leading and trailing sequence
 
 #Expected sequences, uncomment the relevant ones
 #For GECKO v2 Libraries:
-my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+#my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 my $ExpectedTrailingSequence = ""; #Sequence that is expected to come after the gRNA/shRNA sequence
 #For iKRUNC v1 Libraries:
 #my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
@@ -35,12 +35,12 @@ my $ExpectedTrailingSequence = ""; #Sequence that is expected to come after the 
 #my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 #my $ExpectedTrailingSequence = "GTTTAAGAGCTATGCTGGAAACAGCATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #For TRC Libraries (ALSO ADJUST EXPECTED INSERT LENGTH):
-#my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCGG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCGG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 #my $ExpectedTrailingSequence = "TTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #$ExpectedInsertLength=21+6+21;
 
-my $ErrorThresholdLeading = 20; #This number of mutations or indels can be present in the leading  sequences
-my $ErrorThresholdTrailing = 20; #This number of mutations or indels can be present in the trailing sequences
+my $ErrorThresholdLeading = 5; #This number of mutations or indels can be present in the leading  sequences
+my $ErrorThresholdTrailing = 5; #This number of mutations or indels can be present in the trailing sequences
 my @Barcodes;
 @Barcodes = qw(CGTGAT ACATCG GCCTAA TGGTCA CACTGT ATTGGC GATCTG TCAAGT CTGATC AAGCTA GTAGCC TACAAG);
 my %Results;
@@ -87,11 +87,14 @@ while ( defined( my $Line = <LIBRARY> ) ) {
 	$InsertsFound++;
 	chomp($Line);
 	my @values = split( /\t/, $Line );
-	$values[1]=substr($values[1],0,10);
-	if($Library{$values[1]}) {
-		$Library{$values[1]} = $Library{$values[1]} . ";" . $values[0];
+	$values[2]=substr($values[2],0,10);
+	if($Library{$values[2]}) {
+		$Library{$values[2]} = $Library{$values[2]} . ";" . $values[1];
+
 	}
-	$Library{$values[1]} = $values[0];
+	else {
+		$Library{$values[2]} = $values[1];
+	}
 }
 close(LIBRARY) or die "Could not close file $LibraryFile\n";
 print "$InsertsFound inserts found in library file $LibraryFile\n";
@@ -283,7 +286,7 @@ foreach my $Barcode (@Barcodes) {
 print OUTPUT "\n";
 foreach my $InsertSequence (sort {$Library{$a} cmp $Library{$b}} keys %Library) {
 	my $LibraryGene=substr($Library{$InsertSequence},0,index($Library{$InsertSequence},'-'));
-	print OUTPUT $Library{$InsertSequence} . "\t" . $LibraryGene;
+	print OUTPUT $Library{$InsertSequence} . "\t" . $InsertSequence;
 	foreach my $Barcode (@Barcodes) {
 		if($InsertCounts{$InsertSequence}->{$Barcode}) {
 			print OUTPUT "\t" . $InsertCounts{$InsertSequence}->{$Barcode};	
