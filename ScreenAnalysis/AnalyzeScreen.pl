@@ -39,8 +39,8 @@ my $ExpectedTrailingSequence = ""; #Sequence that is expected to come after the 
 #my $ExpectedTrailingSequence = "TTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #$ExpectedInsertLength=21+6+21;
 
-my $ErrorThresholdLeading = 20; #This number of mutations or indels can be present in the leading  sequences
-my $ErrorThresholdTrailing = 20; #This number of mutations or indels can be present in the trailing sequences
+my $ErrorThresholdLeading = 5; #This number of mutations or indels can be present in the leading  sequences
+my $ErrorThresholdTrailing = 5; #This number of mutations or indels can be present in the trailing sequences
 my @Barcodes;
 @Barcodes = qw(CGTGAT ACATCG GCCTAA TGGTCA CACTGT ATTGGC GATCTG TCAAGT CTGATC AAGCTA GTAGCC TACAAG);
 my %Results;
