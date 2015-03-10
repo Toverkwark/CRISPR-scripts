@@ -19,15 +19,15 @@ my $StartTime=time;
 my $NumberOfThreads=8;
 my $BarcodeOffset = 0; #Position of start of barcode
 my $BarcodeLength = 6; #Number of nucleotides that the barcode is long
-my $ExpectedInsertLength = 20; #Number of nucleotides of the insert between leading and trailing sequence
+my $ExpectedInsertLength = 10; #Number of nucleotides of the insert between leading and trailing sequence
 
 #Expected sequences, uncomment the relevant ones
 #For GECKO v2 Libraries:
-#my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
-#my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
+my $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+my $ExpectedTrailingSequence = ""; #Sequence that is expected to come after the gRNA/shRNA sequence
 #For iKRUNC v1 Libraries:
-my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
-my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
+#my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+#my $ExpectedTrailingSequence = "GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 #For iKRUNC v2 short Libraries:
 #my $ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 #my $ExpectedTrailingSequence = "GTTTAAGAGCTAGAAATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
@@ -87,6 +87,10 @@ while ( defined( my $Line = <LIBRARY> ) ) {
 	$InsertsFound++;
 	chomp($Line);
 	my @values = split( /\t/, $Line );
+	$values[1]=substr($values[1],0,10);
+	if($Library{$values[1]}) {
+		$Library{$values[1]} = $Library{$values[1]} . ";" . $values[0];
+	}
 	$Library{$values[1]} = $values[0];
 }
 close(LIBRARY) or die "Could not close file $LibraryFile\n";
