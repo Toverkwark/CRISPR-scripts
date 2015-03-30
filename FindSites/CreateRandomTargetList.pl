@@ -6,7 +6,7 @@ GetOptions(
 	"output=s"  => \$OutputFile,
 );
 open(OUT,">", $OutputFile) or die "ERROR in $0:Cannot open inputfile $OutputFile\n";
-for(my $i=1;$i<=100000000;$i++) {
+for(my $i=1;$i<=1000000;$i++) {
 	my $Sequence;
 	for (my $j=1;$j<=20;$j++) {
 		my $Getal=int(rand(4));
