@@ -16,7 +16,7 @@ print "Usage:perl $0 -input -output -report -library\n-input\tName of input file
 my $StartTime=time;
 
 #Define screen specific settings
-my $NumberOfThreads=8;
+my $NumberOfThreads=64;
 my $BarcodeOffset = 0; #Position of start of barcode
 my $BarcodeLength = 6; #Number of nucleotides that the barcode is long
 my $ExpectedInsertLength = 20; #Number of nucleotides of the insert between leading and trailing sequence

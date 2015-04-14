@@ -4,7 +4,7 @@ use strict;
 our @ISA=qw(Exporter);
 our @EXPORT=qw(getconfig);
 my %confighash;
-my $Location='Home';
+my $Location='Cluster';
 if($Location eq 'Home') {
 	%confighash=(
 		"NumberOfCoresToUse" => "7",
@@ -15,13 +15,24 @@ if($Location eq 'Home') {
 }
 else {
 	if($Location eq 'Work') {
-		use lib "/home/NKI/b.evers/perl5/lib/perl5";
-		%confighash=(
-			"NumberOfCoresToUse" => "3",	
-			"Bowtie" => "/media/Data/iKRUNC/bowtie2-2.1.0/bowtie2",
-			"HumanGenome" => "/media/Data/iKRUNC/hg19",
-			"IndexedHumanGenome" => "/media/Data/iKRUNC/hg19-index",
-		);	
+                use lib "/home/NKI/b.evers/perl5/lib/perl5";
+                %confighash=(
+                        "NumberOfCoresToUse" => "3",
+                        "Bowtie" => "/media/Data/iKRUNC/bowtie2-2.1.0/bowtie2",
+                        "HumanGenome" => "/media/Data/iKRUNC/hg19",
+                        "IndexedHumanGenome" => "/media/Data/iKRUNC/hg19-index",
+                );
+        }
+	else {
+		if($Location eq 'Cluster') {
+			use lib "/home/NKI/b.evers/perl5/lib/perl5";
+			%confighash=(
+				"NumberOfCoresToUse" => "64",	
+				"Bowtie" => "/media/Data/iKRUNC/bowtie2-2.1.0/bowtie2",
+				"HumanGenome" => "/media/Data/iKRUNC/hg19",
+				"IndexedHumanGenome" => "/media/Data/iKRUNC/hg19-index",
+			);	
+		}
 	}
 }
 
