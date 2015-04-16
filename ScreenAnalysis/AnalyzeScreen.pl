@@ -272,7 +272,7 @@ print REPORT "\n";
 
 #Output the read counts of library hits
 print "Writing filtered library insert counts\n";
-print OUTPUT "LibraryID\tSequence";
+print OUTPUT "LibraryID\tGene";
 foreach my $Barcode (@Barcodes) {
 	print OUTPUT "\t$Barcode";
 }
