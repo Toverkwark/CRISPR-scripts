@@ -11,7 +11,7 @@ sub ProcessReads($$$$$$$$$) {
 	my $NotAnalyzed;
 		
 	open( INPUT, $InputFile ) or die "ERROR in $0:Input file $InputFile is not accessible.\n";
-	
+
 	while ( defined( my $line = <INPUT> ) ) {
 		my $BarcodeFound=0;
 		my $BarcodeFoundExact=0;
