@@ -4,8 +4,8 @@ use Statistics::Basic qw(:all);
 use Term::ANSIColor;
 use strict;
 
-my $ControlColumn=5;
-my $TreatedColumn=9;
+my $ControlColumn=4;
+my $TreatedColumn=10;
 my $HorizontalPixels=666;
 my $VerticalPixels=500;
 my $PixelSize=1;
