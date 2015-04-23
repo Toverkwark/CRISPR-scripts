@@ -50,7 +50,7 @@ if($ScreenType eq 'TRC') {
 	#For TRC Libraries (ALSO ADJUST EXPECTED INSERT LENGTH):
 	$ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCGG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 	$ExpectedTrailingSequence = "TTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
-	$confighash{'ExpectedInsertLength'}=21+6+21;
+	$ExpectedInsertLength=21+6+21;
 }
 if($ExpectedTrailingNucleotides > 0) {
 	$ExpectedTrailingSequence=substr($ExpectedTrailingSequence,0,$ExpectedTrailingNucleotides);
