@@ -11,7 +11,7 @@ require "ProcessReads.pl";
 sub MatchBarcode($@);
 sub ScoreTwoStrings($$);
 
-print "Usage:perl $0 -input -output -report -library\n-input\tName of input file\n-output\tName of output file. Default is inputfile.stripped\n-report\tName of report file. Default is inputfile.report\n-library\tName of library file to which inserts are mapped\n";
+print "Usage:perl $0 -input -output -report -library -keepmapfiles\n-input\tName of input file\n-output\tName of output file. Default is inputfile.stripped\n-report\tName of report file. Default is inputfile.report\n-library\tName of library file to which inserts are mapped\n-keepmapfiles\tGive Y as argument to make sure map files are kept for paired end matching\n";
 
 my $StartTime=time;
 
@@ -46,7 +46,8 @@ GetOptions(
 	"input=s"  => \$InputFile,
 	"output=s" => \$OutputFile,
 	"report=s" => \$ReportFile,
-	"library=s" => \$LibraryFile
+	"library=s" => \$LibraryFile,
+	"keepmapfiles=s" => \$KeepMapFiles
 );
 
 if ( !$OutputFile ) {
@@ -62,6 +63,10 @@ open( OUTPUT, ">", $OutputFile ) or die "ERROR in $0:Output file $OutputFile is 
 open( PERFECTOUTPUT, ">", ($OutputFile . ".perfect")) or die "ERROR in $0:Output file $OutputFile.perfect is not accessible.\n";
 open( REPORT, ">", $ReportFile ) or die "ERROR in $0:Report file $ReportFile is not accessible.\n";
 open( LIBRARY, $LibraryFile ) or die "ERROR in $0:Library file $LibraryFile is not accessible.\n";
+if($KeepMapFiles eq 'Y') {
+	open( MAPPEDOUTPUT, ">", $OutputFile . ".mapped") or die "ERROR in $0:Output file $OutputFile.mapped is not accessible.\n";
+	open( MAPPEDPERFECTOUTPUT, ">", ($OutputFile . ".mapped.perfect")) or die "ERROR in $0:Output file $OutputFile.mapped.perfect is not accessible.\n";	
+}
 
 #Start by reading in the library file
 #The format of this file should be [ID],[GENE],[SEQUENCE]
@@ -170,6 +175,9 @@ for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
 		print NOTANALYZED $Line;
 	}
 	close(INPUT) or die "Could not open temporary result file $InputFile$Thread.tmp\n";
+	if($KeepMapFiles eq 'Y') {
+		#Insert code here to combine intermediate mapped files into one
+	}
 }
 close(NOTANALYZED) or die "Could not close file $InputFile.notanalyzed\n";
 
@@ -177,6 +185,8 @@ close(NOTANALYZED) or die "Could not close file $InputFile.notanalyzed\n";
 for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
 	unlink($InputFile . "." . $Thread);
 	unlink($InputFile . "." . $Thread . ".tmp");
+	unlink($InputFile . "." . $Thread . ".mapped");
+	unlink($InputFile . "." . $Thread . ".perfect.mapped");
 }
 
 #Print report of read filtering per barcode

@@ -11,6 +11,8 @@ sub ProcessReads($$$$$$$$$) {
 	my $NotAnalyzed;
 		
 	open( INPUT, $InputFile ) or die "ERROR in $0:Input file $InputFile is not accessible.\n";
+	open(MAPPED, ">", ($InputFile . ".mapped")) or die ("Could not open outputfile " . ($InputFile . ".mapped") . "\n");
+	open(PERFECTMAPPED, ">", ($InputFile . ".perfect.mapped")) or die ("Could not open outputfile " . ($InputFile . ".perfect.mapped") . "\n");
 
 	while ( defined( my $line = <INPUT> ) ) {
 		my $BarcodeFound=0;
@@ -183,6 +185,10 @@ sub ProcessReads($$$$$$$$$) {
 			else {
 				$NotAnalyzed=$NotAnalyzed . "$Sequence\n";
 			}
+		}
+		else {
+			print MAPPED "ERROR:No barcode found\n";
+			print PERFECTMAPPED "ERROR:No barcode found\n";
 		}			
 	}
 	close(INPUT)  or die "Could not close input file $InputFile.\n";
@@ -242,6 +248,8 @@ sub ProcessReads($$$$$$$$$) {
 	print OUTPUT "***NOT ANALYZED***\n";
 	print OUTPUT $NotAnalyzed;
 	close(OUTPUT) or die "Could not close outputfile " . ($InputFile . ".tmp") . "\n";
+	close(MAPPED) or die "Could not close outputfile " . ($InputFile . ".mapped") . "\n";
+	close(PERFECTMAPPED) or die "Could not close outputfile " . ($InputFile . ".perfect.mapped") . "\n";
 	return();
 }
 
