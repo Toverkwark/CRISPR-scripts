@@ -78,7 +78,7 @@ my $InsertsFound;
 while ( defined( my $Line = <LIBRARY> ) ) {
 	$InsertsFound++;
 	chomp($Line);
-	my @values = split( /\t/, $Line );
+	my @values = split( /\,/, $Line );
 
 	#Include this line because excel generated csv files have CRLF line endings
 	#$values[2]=substr($values[2],0,length($values[2])-1);
