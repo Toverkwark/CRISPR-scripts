@@ -11,8 +11,8 @@ my $ExpectedTrailingSequence;
 ########################################################################################################################################################################################
 #General settings
 my $Location='Cluster';
-my $ScreenType='GIN_A';
-my $ExpectedTrailingNucleotides=0; #Set at 0 to include all 
+my $ScreenType='RP418';
+my $ExpectedTrailingNucleotides=5; #Set at 0 to include all 
 my $BowtieLocation;
 my $HumanGenomeLocation;
 my $IndexedHumanGenomeLocation;
@@ -21,7 +21,7 @@ my $BarcodeOffset=0;
 my $BarcodeLength=6;
 my $ExpectedInsertLength=20;
 my $ErrorThresholdLeading = 10; #This number of mutations or indels can be present in the leading  sequences
-my $ErrorThresholdTrailing = 10; #This number of mutations or indels can be present in the trailing sequences
+my $ErrorThresholdTrailing = 2; #This number of mutations or indels can be present in the trailing sequences
 ########################################################################################################################################################################################
 ########################################################################################################################################################################################
 
@@ -30,6 +30,11 @@ if($ScreenType eq 'GIN_A') {
         #For CRISPRi Libraries clone into pGIN_A:
         $ExpectedLeadingSequence = "CCCTTGGAGAAAAGCCTTGTTTG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
         $ExpectedTrailingSequence = "GTTTAAGAGCTAGAAA"; #Sequence that is expected to come after the gRNA/shRNA sequence
+}
+if($ScreenType eq 'RP418') {
+        #For CRISPRi Libraries clone into pGIN_A:
+        $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+        $ExpectedTrailingSequence = "GTTTA"; #Sequence that is expected to come after the gRNA/shRNA sequence
 }
 if($ScreenType eq 'Geckov2') {
 	#For GECKO v2 Libraries:
@@ -47,6 +52,11 @@ if($ScreenType eq 'iKRUNCv2Short') {
 	$ExpectedTrailingSequence = "GTTTAAGAGCTAGAAATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
 }
 if($ScreenType eq 'iKRUNCv2Long') {
+if($ScreenType eq 'GIN_A') {
+        #For CRISPRi Libraries clone into pGIN_A:
+        $ExpectedLeadingSequence = "CCCTTGGAGAAAAGCCTTGTTTG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+        $ExpectedTrailingSequence = "GTTTAAGAGCTAGAAA"; #Sequence that is expected to come after the gRNA/shRNA sequence
+}
 	#For iKRUNC v2 long Libraries:
 	$ExpectedLeadingSequence = "CCCTATCAGTGATAGAGACTCGAG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 	$ExpectedTrailingSequence = "GTTTAAGAGCTATGCTGGAAACAGCATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
