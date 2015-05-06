@@ -80,7 +80,8 @@ while ( defined( my $Line = <LIBRARY> ) ) {
 	my @values = split( /\t/, $Line );
 
 	#Include this line because excel generated csv files have CRLF line endings
-	$values[2]=substr($values[2],0,length($values[2])-1);
+	#$values[2]=substr($values[2],0,length($values[2])-1);
+	
 	$Library{$values[2]} = $values[0];
 	$Genes{$values[0]}=$values[1];
 }
