@@ -12,7 +12,7 @@ my $ExpectedTrailingSequence;
 #General settings
 my $Location='Cluster';
 my $ScreenType='Geckov2';
-my $ExpectedTrailingNucleotides=4; #Set at 0 to include all 
+my $ExpectedTrailingNucleotides=0; #Set at 0 to include all 
 my $BowtieLocation;
 my $HumanGenomeLocation;
 my $IndexedHumanGenomeLocation;
@@ -20,12 +20,17 @@ my $NumberOfCoresToUse = 64;
 my $BarcodeOffset=0;
 my $BarcodeLength=6;
 my $ExpectedInsertLength=20;
-my $ErrorThresholdLeading = 20; #This number of mutations or indels can be present in the leading  sequences
-my $ErrorThresholdTrailing = 2; #This number of mutations or indels can be present in the trailing sequences
+my $ErrorThresholdLeading = 10; #This number of mutations or indels can be present in the leading  sequences
+my $ErrorThresholdTrailing = 10; #This number of mutations or indels can be present in the trailing sequences
 ########################################################################################################################################################################################
 ########################################################################################################################################################################################
 
 #Set relevant expected sequences
+if($ScreenType eq 'GIN_A') {
+        #For CRISPRi Libraries clone into pGIN_A:
+        $ExpectedLeadingSequence = "CCCTTGGAGAAAAGCCTTGTTT"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+        $ExpectedTrailingSequence = "GTTTAAGAGCTAGAAA"; #Sequence that is expected to come after the gRNA/shRNA sequence
+}
 if($ScreenType eq 'Geckov2') {
 	#For GECKO v2 Libraries:
 	$ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
