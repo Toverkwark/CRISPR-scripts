@@ -34,6 +34,7 @@ sub ProcessReads($$$$$$$$$) {
 		my $Qualities = <INPUT>;
 		chomp($Sequence);
 		chomp($Qualities);
+		
 		#Get the barcode. See if it exists. If not, try to map it with maximally 1 nucleotide replacement and only 1 match existing.
 		my $Barcode = substr( $Sequence, $BarcodeOffset, $BarcodeLength );
 		if ( grep( /$Barcode/, @Barcodes ) ) {
@@ -176,10 +177,19 @@ sub ProcessReads($$$$$$$$$) {
 					$InsertSequence=substr($Sequence,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)),$InsertLength);
 					if($$Library{$InsertSequence}) {
 						$Results{$Barcode}->[8]++;
-						$Results{$Barcode}->[11]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);
 						$InsertCounts{$InsertSequence}->{$Barcode}++;
-						$PerfectInsertCounts{$InsertSequence}->{$Barcode}++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);
-					}	
+						print MAPPED $$Library{$InsertSequence} . "\n";
+						if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact) {
+							$Results{$Barcode}->[11]++;
+							$PerfectInsertCounts{$InsertSequence}->{$Barcode}++;
+							print PERFECTMAPPED $$Library{$InsertSequence} . "\n"; 
+						} else {
+							print PERFECTMAPPED "ERROR:Insert not mapped to library\n";
+						}
+					}
+					else {
+						print MAPPED "ERROR:Insert not mapped to library\n";
+					}
 				}
 			}
 			else {

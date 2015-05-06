@@ -39,6 +39,7 @@ my $InputFile;
 my $OutputFile;
 my $ReportFile;
 my $LibraryFile;
+my $KeepMapFiles;
 my $RecordsAnalyzed=0;
 my $NotAnalyzed="";
 
