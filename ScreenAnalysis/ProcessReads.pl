@@ -171,6 +171,8 @@ sub ProcessReads($$$$$$$$$) {
 				$InsertLengths{$InsertLength}++;
 				$Results{$Barcode}->[6]++;
 				$Results{$Barcode}->[9]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);
+				#Skip insert length assertion for this library since there are inserts of different sizes
+				$ExpectedInsertLength=$InsertLength;
 				if($InsertLength==$ExpectedInsertLength) {
 					$Results{$Barcode}->[7]++;
 					$Results{$Barcode}->[10]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);			
