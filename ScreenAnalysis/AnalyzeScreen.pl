@@ -64,10 +64,6 @@ open( OUTPUT, ">", $OutputFile ) or die "ERROR in $0:Output file $OutputFile is 
 open( PERFECTOUTPUT, ">", ($OutputFile . ".perfect")) or die "ERROR in $0:Output file $OutputFile.perfect is not accessible.\n";
 open( REPORT, ">", $ReportFile ) or die "ERROR in $0:Report file $ReportFile is not accessible.\n";
 open( LIBRARY, $LibraryFile ) or die "ERROR in $0:Library file $LibraryFile is not accessible.\n";
-if($KeepMapFiles eq 'Y') {
-	open( MAPPEDOUTPUT, ">", $OutputFile . ".mapped") or die "ERROR in $0:Output file $OutputFile.mapped is not accessible.\n";
-	open( MAPPEDPERFECTOUTPUT, ">", ($OutputFile . ".mapped.perfect")) or die "ERROR in $0:Output file $OutputFile.mapped.perfect is not accessible.\n";	
-}
 
 #Start by reading in the library file
 #The format of this file should be [ID],[GENE],[SEQUENCE]
@@ -179,6 +175,13 @@ for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
 	close(INPUT) or die "Could not open temporary result file $InputFile$Thread.tmp\n";
 	if($KeepMapFiles eq 'Y') {
 		#Insert code here to combine intermediate mapped files into one
+		my $TempMapFile=$InputFile . "." . $Thread . ".mapped";
+		my $TempOutputFile=$OutputFile . ".mapped"; 
+		`cat $TempMapFile >> $TempOutputFile`;
+		
+		my $TempMapFile=$InputFile . "." . $Thread . ".perfect.mapped";
+		my $TempOutputFile=$OutputFile . ".perfect.mapped";
+		`cat $TempMapFile >> $TempOutputFile`;
 	}
 }
 close(NOTANALYZED) or die "Could not close file $InputFile.notanalyzed\n";

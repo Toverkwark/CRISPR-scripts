@@ -178,22 +178,29 @@ sub ProcessReads($$$$$$$$$) {
 					if($$Library{$InsertSequence}) {
 						$Results{$Barcode}->[8]++;
 						$InsertCounts{$InsertSequence}->{$Barcode}++;
-						print MAPPED $$Library{$InsertSequence} . "\n";
+						print MAPPED $$Library{$InsertSequence} . "\t" . $Barcode . "\n";
 						if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact) {
 							$Results{$Barcode}->[11]++;
 							$PerfectInsertCounts{$InsertSequence}->{$Barcode}++;
-							print PERFECTMAPPED $$Library{$InsertSequence} . "\n"; 
+							print PERFECTMAPPED $$Library{$InsertSequence} . "\t" . $Barcode ."\n"; 
 						} else {
-							print PERFECTMAPPED "ERROR:Insert not mapped to library\n";
+							print PERFECTMAPPED "ERROR:Leading and/or trailing sequence not perfect\n";
 						}
 					}
 					else {
 						print MAPPED "ERROR:Insert not mapped to library\n";
+						print PERFECTMAPPED "ERROR:Insert not mapped to library\n";
 					}
+				}
+				else {
+					print MAPPED "ERROR:Insert length incorrect\n";
+					print PERFECTMAPPED "ERROR:Insert length incorrect\n";
 				}
 			}
 			else {
 				$NotAnalyzed=$NotAnalyzed . "$Sequence\n";
+				print MAPPED "ERROR:No leading or trailing sequence found\n";
+				print PERFECTMAPPED "ERROR:No leading or trailing sequence found\n";
 			}
 		}
 		else {
