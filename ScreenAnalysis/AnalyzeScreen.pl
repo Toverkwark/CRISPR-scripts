@@ -174,7 +174,6 @@ for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
 	}
 	close(INPUT) or die "Could not open temporary result file $InputFile$Thread.tmp\n";
 	if($KeepMapFiles eq 'Y') {
-		#Insert code here to combine intermediate mapped files into one
 		my $TempMapFile=$InputFile . "." . $Thread . ".mapped";
 		my $TempOutputFile=$OutputFile . ".mapped"; 
 		`cat $TempMapFile >> $TempOutputFile`;
