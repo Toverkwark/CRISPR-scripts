@@ -171,7 +171,8 @@ sub ProcessReads($$$$$$$$$) {
 				$InsertLengths{$InsertLength}++;
 				$Results{$Barcode}->[6]++;
 				$Results{$Barcode}->[9]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);
-				if($InsertLength==$ExpectedInsertLength) {
+				#Turn off insert length assertion for pGIN libraries with variable insert sizes
+				#if($InsertLength==$ExpectedInsertLength) {
 					$Results{$Barcode}->[7]++;
 					$Results{$Barcode}->[10]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);			
 					$InsertSequence=substr($Sequence,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)),$InsertLength);
@@ -191,11 +192,11 @@ sub ProcessReads($$$$$$$$$) {
 						print MAPPED "ERROR:Insert not mapped to library\n";
 						print PERFECTMAPPED "ERROR:Insert not mapped to library\n";
 					}
-				}
-				else {
-					print MAPPED "ERROR:Insert length incorrect\n";
-					print PERFECTMAPPED "ERROR:Insert length incorrect\n";
-				}
+				#}
+				#else {
+				#	print MAPPED "ERROR:Insert length incorrect\n";
+				#	print PERFECTMAPPED "ERROR:Insert length incorrect\n";
+				#}
 			}
 			else {
 				$NotAnalyzed=$NotAnalyzed . "$Sequence\n";

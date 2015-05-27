@@ -10,8 +10,8 @@ my $ExpectedTrailingSequence;
 ########################################################################################################################################################################################
 ########################################################################################################################################################################################
 #General settings
-my $Location='Work';
-my $ScreenType='GIN_A';
+my $Location='Cluster';
+my $ScreenType='GIN_RV';
 my $ExpectedTrailingNucleotides=0; #Set at 0 to include all 
 my $BowtieLocation;
 my $HumanGenomeLocation;
@@ -21,15 +21,20 @@ my $BarcodeOffset=0;
 my $BarcodeLength=6;
 my $ExpectedInsertLength=20;
 my $ErrorThresholdLeading = 10; #This number of mutations or indels can be present in the leading  sequences
-my $ErrorThresholdTrailing = 10; #This number of mutations or indels can be present in the trailing sequences
+my $ErrorThresholdTrailing = 5; #This number of mutations or indels can be present in the trailing sequences
 ########################################################################################################################################################################################
 ########################################################################################################################################################################################
 
 #Set relevant expected sequences
 if($ScreenType eq 'GIN_A') {
         #For CRISPRi Libraries clone into pGIN_A:
-        $ExpectedLeadingSequence = "CCCTTGGAGAAAAGCCTTGTTTG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+        $ExpectedLeadingSequence = "CCCTTGGAGAAAAGCCTTGTTT"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
         $ExpectedTrailingSequence = "GTTTAAGAGCTAGAAA"; #Sequence that is expected to come after the gRNA/shRNA sequence
+}
+if($ScreenType eq 'GIN_RV') {
+        #For CRISPRi Libraries clone into pGIN_A:
+        $ExpectedLeadingSequence = "ACTTGCTATGCTGTTTCCAGCATAGCTCTTAAAC"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+        $ExpectedTrailingSequence = "GGTGTTTCGTCCTTTCC"; #Sequence that is expected to come after the gRNA/shRNA sequence
 }
 if($ScreenType eq 'Geckov2') {
 	#For GECKO v2 Libraries:
