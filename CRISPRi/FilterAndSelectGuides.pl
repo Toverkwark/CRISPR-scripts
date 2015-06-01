@@ -6,6 +6,7 @@ my %opts;
 my %PotentialGuides;
 my %GuidesPerGene;
 my %SelectedGuides;
+my $MaxGuidesPerTranscript=10;
 getopt( 'i', \%opts );
 open(IN, my $InputFile=$opts{'i'}) or die "ERROR in $0:Could not open inputfile\n";
 
@@ -72,16 +73,16 @@ foreach my $Gene (keys %PotentialGuides) {
 								push(@{$SelectedGuides{$Gene}->{$_}->{'Guides'}},$GuideSequence) unless ($GuideSequence ~~ @{$SelectedGuides{$Gene}->{$_}->{'Guides'}});
 							}	
 						}
-						#Stop selecting guides if 10 are reached
-						last if (@{$SelectedGuides{$Gene}->{$Transcript}->{'Guides'}}>=10);
+						#Stop selecting guides if max is reached
+						last if (@{$SelectedGuides{$Gene}->{$Transcript}->{'Guides'}}>=$MaxGuidesPerTranscript);
 					}
 				}
 			}
-			if (@{$SelectedGuides{$Gene}->{$Transcript}->{'Guides'}}<10) {
+			if (@{$SelectedGuides{$Gene}->{$Transcript}->{'Guides'}}<$MaxGuidesPerTranscript) {
 				$IncludePromiscuousGuides=1;
 			} 
 			else {
-				#In case we already reached 10 guides for this transcript, make sure it doesn't loop into finding the same ones again
+				#In case we already reached max guides for this transcript, make sure it doesn't loop into finding the same ones again
 				$i++;
 			}
 		}
@@ -89,7 +90,6 @@ foreach my $Gene (keys %PotentialGuides) {
 }
 
 #TODO: Subselect guides in case any gene has more than a certain number of guides selected
-
 my %OutputGuides;
 foreach my $Gene (keys %SelectedGuides) {
 	foreach my $Transcript (keys $SelectedGuides{$Gene}) {
