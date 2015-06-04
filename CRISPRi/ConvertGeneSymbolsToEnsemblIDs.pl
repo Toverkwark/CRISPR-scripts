@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 use Getopt::Std;
-my $ApprisFile = "../GenomeInfo/appris_data.principal_hg19.txt";
+my $ApprisFile = "../GenomeInfo/20150604/appris_data.principal.txt";
 
 #Import script options
 my %ScriptOptions;
@@ -17,7 +17,7 @@ open( IN, $GeneSymbolList ) or die "Could not open input file $GeneSymbolList\n"
 while ( defined(my $GeneSymbol = <IN> )) {
 	chomp($GeneSymbol);
 	print "Found gene symbol $GeneSymbol, finding transcript IDs\n";
-	my @Transcripts=`grep -P "^$GeneSymbol\t" $ApprisFile`;
+	my @Transcripts=`grep -P "^$GeneSymbol\t.*PRINCIPAL" $ApprisFile`;
 		if ( @Transcripts ) {
 		foreach (@Transcripts) {
 			my @TranscriptIDs=split(/\t/,$_);
