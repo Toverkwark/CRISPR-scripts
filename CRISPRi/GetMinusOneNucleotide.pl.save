@@ -1,0 +1,36 @@
+
+:q
+
+use Term::ANSIColor;
+require 'FetchGenomicSequence.pl';
+sub FetchGenomicSequence($$$);
+
+open(IN,'library.csv');
+<IN>;
+while(defined(my $Line=<IN>)) {
+	chomp($Line);
+	@values=split(/\t/,$Line);
+	$Sense=$values[5];
+	$Chr=$values[7];
+	$Length=$values[6];
+	$Sequence=$values[4];
+	$Orientation=$values[8];
+	$TSS=$values[10];
+	$Position=$values[11];
+	print "$Sequence\t$Chr\t$Position\t$TSS\t$Orientation\t$Sense\n";
+	if($Chr ne "#N/A") {
+		if(($Sense eq "Antisense" && $Orientation eq "+") || ($Sense eq "Sense" && $Orientation eq "-")) {
+			$Sequence=~tr/ACTG/TGAC/;		
+			$Sequence=reverse($Sequence);		
+			$PrintText=FetchGenomicSequence($Chr,$TSS-$Position-50,$TSS-$Position+50);
+			`$PrintText`;
+		}
+		else {	
+			$PrintText=FetchGenomicSequence($Chr,$TSS+$Position-50,$TSS+$Position+50);
+			$PrintText="echo " . $PrintText . "|grep --color  " . $Sequence;
+			print `$PrintText`;
+			print $PrintText . "\n";
+		}
+	}
+}
+close(IN);
