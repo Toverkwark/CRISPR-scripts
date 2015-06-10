@@ -109,17 +109,6 @@ foreach my $Gene (sort {$a cmp $b} keys %OutputGuides) {
 		print OUT "\n";
 	}
 }
-foreach my $Gene (sort {$a cmp $b} keys %OutputGuides) {
-	open(FASTQ,">","fastq/" . $Gene . ".fastq");
-	my $Counter=0;
-        foreach my $Guide (keys $OutputGuides{$Gene}) {
-		$Counter++;
-                my @values=@{$GuidesPerGene{$Gene}->{$Guide}->{'LineValues'}};
-		print FASTQ ">" . $Gene . "_" . $Counter . "\n";
-		print FASTQ $values[1] . "NGG\n";
-        }
-	close(FASTQ);
-}
 
 close (OUT) or die "ERROR in $0:Could not close output file\n";
 close(IN) or die "ERROR in $0:Could not close inputfile\n";
