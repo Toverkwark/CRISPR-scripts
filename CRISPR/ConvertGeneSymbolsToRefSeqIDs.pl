@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 use Getopt::Std;
-my $RefSeqFile = "../refseq/hg19.txt";
+my $RefSeqFile = "../GenomeInfo/hg19.txt";
 
 #Import script options
 my %ScriptOptions;
