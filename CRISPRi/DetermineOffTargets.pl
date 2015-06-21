@@ -34,7 +34,7 @@ while (defined(my $Line = <IN>)) {
 	my @RefSeqValues = split( /\t/, $Line );
 	my $Chromosome = $RefSeqValues[2];
 	my $GeneStart = $RefSeqValues[4];
-	my $GeneEnd = $RefSeqValues[4];
+	my $GeneEnd = $RefSeqValues[5];
 	push(@{$GenePositions{$Chromosome}},[$GeneStart,$GeneEnd]);
 }
 close (IN) or die "ERROR in $0: Cannot close refseqfile $RefSeqFile\n";

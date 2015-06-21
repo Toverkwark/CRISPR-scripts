@@ -1,6 +1,12 @@
 use Getopt::Std;
 use warnings;
 use strict;
+use lib '..';
+use LocalSettings;
+my %LocalSettings=getconfig();
+my $Bowtie=$LocalSettings{'Bowtie'};
+my $IndexedHumanGenome=$LocalSettings{'IndexedHumanGenome'};
+my $NumberOfCoresToUse=$LocalSettings{'NumberOfCoresToUse'};
 
 sub IsPositionNearExon($$);
 
@@ -12,6 +18,7 @@ my %OutputText;
 our %Exons;
 my $ProcessRelatives = 0;
 my $AdditionalIdenticalTargetsFound;
+#The margin determines the amount of nt any off-target site needs to be to be scored as 'near an exon' 
 my $Margin = 100;
 my $RefSeqFile = '../GenomeInfo/hg19.txt';
 
@@ -74,7 +81,7 @@ close (IN) or die "ERROR in $ScriptName: Cannot close inputfile $InputFile\n";
 
 #Map all the relatives to the genome
 if ($ProcessRelatives) {
-	`~/data/genomestuff/bowtie2-2.1.0/bowtie2 ~/data/genomestuff/hg19-index/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a --mm -S $RelativesMatchFile`;	
+	`$Bowtie $IndexedHumanGenome -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a -S $RelativesMatchFile --mm`;	
 	
 	#Read in everything that was mapped
 	open (IN, $RelativesMatchFile) or die "ERROR in $ScriptName: Cannot open relatives match file $RelativesMatchFile\n";

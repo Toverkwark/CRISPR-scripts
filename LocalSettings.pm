@@ -10,7 +10,7 @@ my $ExpectedTrailingSequence;
 ########################################################################################################################################################################################
 ########################################################################################################################################################################################
 #General settings
-my $Location='Home';
+my $Location='Work';
 my $ScreenType='GIN_A';
 my $ExpectedTrailingNucleotides=0; #Set at 0 to include all 
 my $BowtieLocation;
@@ -69,7 +69,7 @@ if($ExpectedTrailingNucleotides > 0) {
 if($Location eq 'Home') {
 	$BowtieLocation="/home/bastiaan/data/genomestuff/bowtie2-2.1.0/bowtie2";
 	$HumanGenomeLocation="/home/bastiaan/data/genomestuff/hg19";
-	$IndexedHumanGenomeLocation="/home/bastiaan/data/genomestuff/hg19-index";
+	$IndexedHumanGenomeLocation="/home/bastiaan/data/genomestuff/hg19-index/hg19";
 	if($NumberOfCoresToUse>8) {
 		$NumberOfCoresToUse=8;
 	}
@@ -78,14 +78,14 @@ else {
 	if($Location eq 'Work') {
 	        $BowtieLocation="/media/Data/iKRUNC/bowtie2-2.1.0/bowtie2";
         	$HumanGenomeLocation="/media/Data/iKRUNC/hg19";
-	        $IndexedHumanGenomeLocation="/media/Data/iKRUNC/hg19-index";
+	        $IndexedHumanGenomeLocation="/media/Data/iKRUNC/hg19-index/hg19";
 	}
 	else {
 	        if($Location eq 'Cluster') {
 			use lib "/home/NKI/b.evers/perl5/lib/perl5";
 	                $BowtieLocation="bowtie2";
         	        $HumanGenomeLocation="/home/NKI/b.evers/Genomes/hg19/genome-fasta";
-                	$IndexedHumanGenomeLocation="/home/NKI/b.evers/Genomes/hg19/genome-index";
+                	$IndexedHumanGenomeLocation="/home/NKI/b.evers/Genomes/hg19/genome-index/hg19";
 		}
         }
 

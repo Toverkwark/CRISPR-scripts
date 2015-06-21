@@ -5,7 +5,7 @@ use Cwd 'abs_path';
 use File::Basename;
 
 my ($CDSSearchFraction, $Genome, $StartNeighbourhood, $SelectNumberOfProtospacers, $Species, $RefSeqFile, %ScriptOptions, %Protospacers, %SelectedProtospacers, %ProtospacerSequences, $OutputFile, %GenesToProcess);
-my $QualityFileLocation="./";
+my $QualityFileLocation="output/";
 my $SVGScriptFile="../SVGCreator/svgcreator.pl";
 my $DirName = dirname(abs_path($0));
 

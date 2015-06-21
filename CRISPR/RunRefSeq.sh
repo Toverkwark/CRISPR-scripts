@@ -27,7 +27,7 @@ if [ ! -f output/$1.qualities.4 ]; then
 
 	#Then, find genome-wide occurances of identical target sites
 	echo 'Find genome-wide occurances for identical target sites for' $1
-	bowtie2 /home/NKI/b.evers/Genomes/hg19/genome-index/hg19 -r output/$1.protospacers -t -S output/$1.matched --no-hd --score-min L,-5,0 -k 2 --mm
+	/media/Data/iKRUNC/bowtie2-2.1.0/bowtie2 /media/Data/iKRUNC/hg19-index/hg19 -r output/$1.protospacers -t -S output/$1.matched --no-hd --score-min L,-5,0 -k 2 --mm
 
 	#Determine how many identical targets in the genome each protospacer has
 	echo 'Filter protospacer list for unique ones for' $1
