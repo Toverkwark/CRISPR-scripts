@@ -13,7 +13,7 @@ our %Exons;
 my $ProcessRelatives = 0;
 my $AdditionalIdenticalTargetsFound;
 my $Margin = 100;
-my $RefSeqFile = '/home/NKI/b.evers/RefSeq/refGene.txt';
+my $RefSeqFile = '../GenomeInfo/hg19.txt';
 
 getopt( 'oids', \%opts );
 die "ERROR in $ScriptName: No Outputfile given.\n" unless my $OutputFile = $opts{'o'};
@@ -67,14 +67,14 @@ while (defined(my $Line=<IN>)) {
 		$ProcessRelatives = 1;
 		$RelativesFound{$TargetSequence} = 0;
 		$ExonicRelativesFound{$TargetSequence} = 0;
-		`perl /home/NKI/b.evers/CRISPR/FindRelativesOfOligo.pl -i $TargetSequence -o $PotentialRelativesFile -d $Depth -s $SeedLength`;
+		`perl FindRelativesOfOligo.pl -i $TargetSequence -o $PotentialRelativesFile -d $Depth -s $SeedLength`;
 	}
 }
 close (IN) or die "ERROR in $ScriptName: Cannot close inputfile $InputFile\n";
 
 #Map all the relatives to the genome
 if ($ProcessRelatives) {
-	`bowtie2 /home/NKI/b.evers/hg19-index/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a --mm -S $RelativesMatchFile`;	
+	`~/data/genomestuff/bowtie2-2.1.0/bowtie2 ~/data/genomestuff/hg19-index/hg19 -f $PotentialRelativesFile -t --no-hd --score-min L,-5,0 -a --mm -S $RelativesMatchFile`;	
 	
 	#Read in everything that was mapped
 	open (IN, $RelativesMatchFile) or die "ERROR in $ScriptName: Cannot open relatives match file $RelativesMatchFile\n";

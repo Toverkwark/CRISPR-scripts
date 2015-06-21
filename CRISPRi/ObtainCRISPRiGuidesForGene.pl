@@ -1,7 +1,7 @@
 use Getopt::Std;
 use warnings;
 use strict;
-require 'FetchGenomicSequence.pl';
+require '../SharedTools/FetchGenomicSequence.pl';
 sub FetchGenomicSequence($$$);
 
 #Cas9 cuts here:

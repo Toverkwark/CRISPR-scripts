@@ -5,8 +5,8 @@ use Cwd 'abs_path';
 use File::Basename;
 
 my ($CDSSearchFraction, $Genome, $StartNeighbourhood, $SelectNumberOfProtospacers, $Species, $RefSeqFile, %ScriptOptions, %Protospacers, %SelectedProtospacers, %ProtospacerSequences, $OutputFile, %GenesToProcess);
-my $QualityFileLocation="/media/Data/QualityFiles/";
-my $SVGScriptFile="/media/Bastiaan_Portable/Work/Active\ Projects/Comparison\ Screens/librarydesign/scripts/svgcreator/svgcreator.pl";
+my $QualityFileLocation="./";
+my $SVGScriptFile="../SVGCreator/svgcreator.pl";
 my $DirName = dirname(abs_path($0));
 
 #Get options passed to script
@@ -33,7 +33,7 @@ else {
 		die "ERROR in $0: Species $Species is not currently handled\n";
 	}
 }
-$RefSeqFile = $DirName . "/refseq/$Genome.txt";
+$RefSeqFile = "../GenomeInfo/$Genome.txt";
 $QualityFileLocation=$QualityFileLocation . $Genome . "/";
 
 #Extract information from inputfile

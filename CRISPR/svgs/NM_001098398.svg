@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" onload="init(evt)" width="100%" height="100%" viewBox="0 0 1500 130" id="svgimage">\n	<style>
+		.caption{font-size: 14px; font-family: Arial}
+		.tooltip{font-size: 12px; font-family: Arial}
+		.tooltip_bg{fill: white; stroke: black; stroke-width: 1; opacity: 0.85;}	
+	</style>
+
+	<script type="text/ecmascript">
+		<![CDATA[
+			function init(evt) {
+				if ( window.svgDocument == null ) {
+					svgDocument = evt.target.ownerDocument;
+				}
+				tooltip = svgDocument.getElementById('tooltip');
+				tooltip_bg = svgDocument.getElementById('tooltip_bg');
+			}
+
+			function ShowTooltip(evt, mouseovertext) {
+				var svg = document.querySelector('svg');
+				var ScreenTransformationMatrix = svg.getScreenCTM();
+				tooltip.firstChild.data = mouseovertext;
+				length = tooltip.getComputedTextLength()+5;
+				if((evt.offsetX/ScreenTransformationMatrix.a)>750) {
+					tooltip.setAttributeNS(null,"x",(evt.offsetX/ScreenTransformationMatrix.a)-40-length);
+				}
+				else {
+					tooltip.setAttributeNS(null,"x",(evt.offsetX/ScreenTransformationMatrix.a)+20);
+				}
+				tooltip.setAttributeNS(null,"y",(evt.offsetY/ScreenTransformationMatrix.d)+21);
+				tooltip.setAttributeNS(null,"visibility","visible");
+				tooltip_bg.setAttributeNS(null,"width",length);
+				if((evt.offsetX/ScreenTransformationMatrix.a)>750) {
+					tooltip_bg.setAttributeNS(null,"x",(evt.clientX/ScreenTransformationMatrix.a)-42-length);
+				}
+				else {
+					tooltip_bg.setAttributeNS(null,"x",(evt.clientX/ScreenTransformationMatrix.a)+18);
+				}
+				tooltip_bg.setAttributeNS(null,"y",(evt.clientY/ScreenTransformationMatrix.d)+8);
+				tooltip_bg.setAttributeNS(null,"visibility","visible");
+			}
+
+			function HideTooltip(evt) {
+				tooltip.setAttributeNS(null,"visibility","hidden");
+				tooltip_bg.setAttributeNS(null,"visibility","hidden");
+			}
+			
+			function ClickTriangle(TriangleID) {     		
+      		var path=svgDocument.getElementById(TriangleID);
+      		var CurrentTriangleColor=path.style.getPropertyValue("stroke");   			
+				if(CurrentTriangleColor=='#000000') {
+					path.style.setProperty("stroke","red", "");
+   				path.style.setProperty("stroke-width","2", "");
+				}				
+				else {
+					path.style.setProperty("stroke","black", "");
+   				path.style.setProperty("stroke-width","1", "");
+				}
+			}
+		   function AddEventListeners(CallbackFunction)
+		   {	
+		   	AllTriangles = svgDocument.getElementsByClassName('Triangle');					   	
+		   	for (var i = 0; i < AllTriangles.length; i++) {
+					AllTriangles[i].addEventListener("click", function () {CallbackFunction(this.id)}, false); 
+				}	
+		   }
+		]]>
+	</script>
+	<defs>
+		<linearGradient id = "grad1" x1 = "0%" y1 = "0%" x2 = "0%" y2 = "100%">
+			<stop stop-color = "rgb(200,200,255)" offset = "0%"/>
+			<stop stop-color = "rgb(255,255,255)" offset = "50%"/>
+			<stop stop-color = "rgb(200,200,255)" offset = "100%"/>
+		</linearGradient>
+		<linearGradient id = "blueyellow" x1 = "0%" y1 = "0%" x2 = "100%" y2 = "0%">
+			<stop stop-color = "rgb(0,0,255)" offset = "0%"/>
+			<stop stop-color = "rgb(255,255,255)" offset = "50%"/>
+			<stop stop-color = "rgb(255,255,0)" offset = "100%"/>
+		</linearGradient>
+	</defs>
+	  <rect x="0" y="61" width="100" height="8" fill="black" stroke="black" stroke-width="1" />'
+  <rect x="1112.07200847158" y="57" width="387.927991528415" height="16" fill="black" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 33')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="1097.24673490999" y="50" width="14.8252735615955" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 33')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="1049.0645958348" y="50" width="48.1821390751853" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 32')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="1009.0363572185" y="50" width="40.0282386163078" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 31')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="981.609601129545" y="50" width="27.4267560889516" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 30')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="935.404165195905" y="50" width="46.2054359336393" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 29')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="901.553123896929" y="50" width="33.8510412989763" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 28')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="884.504059301094" y="50" width="17.0490645958348" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 27')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="865.23120367102" y="50" width="19.2728556300741" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 26')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="838.051535474762" y="50" width="27.1796681962584" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 25')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="815.813625132369" y="50" width="22.2379103423932" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 24')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="785.174726438405" y="50" width="30.638898693964" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 23')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="763.183903988705" y="50" width="21.9908224497" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 22')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="739.463466290152" y="50" width="23.7204376985528" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 21')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="692.516766678433" y="50" width="46.946699611719" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 20')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="656.194846452524" y="50" width="36.3219202259089" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 19')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="615.919519943523" y="50" width="40.2753265090011" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 18')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="574.902929756442" y="50" width="41.0165901870808" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 17')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="553.653370984822" y="50" width="21.2495587716202" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 16')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="519.061066007766" y="50" width="34.5923049770561" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 15')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="498.552770914225" y="50" width="20.5082950935404" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 14')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="479.774091069538" y="50" width="18.7786798446876" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 13')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="463.219202259089" y="50" width="16.5548888104483" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 12')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="425.908930462407" y="50" width="37.310271796682" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 11')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="405.400635368867" y="50" width="20.5082950935404" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 10')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="371.796681962584" y="50" width="33.6039534062831" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 9')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="347.087892693258" y="50" width="24.7087892693258" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 8')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="319.908224497" y="50" width="27.1796681962584" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 7')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="292.728556300741" y="50" width="27.1796681962584" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 6')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="273.702788563361" y="50" width="19.0257677373809" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 5')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="253.688669255207" y="50" width="20.0141193081539" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 4')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="235.404165195906" y="50" width="18.2845040593011" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 3')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="207.236145428874" y="50" width="28.1680197670314" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 2')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="197.352629721144" y="50" width="9.88351570773032" height="30" fill="url(#grad1)" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 1')" onmouseout="HideTooltip(evt)"/>'
+  <rect x="100" y="57" width="97.3526297211437" height="16" fill="black" stroke="black" stroke-width="1" onmousemove="ShowTooltip(evt, 'Exon 1')" onmouseout="HideTooltip(evt)"/>'
+<polygon id="1" class="Triangle" points="322.826685492411,40 326.826685492411,50 330.826685492411,40" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'ACATCCGATTCCACCGCACCAGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(1)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 -30" to="0 0" dur="0.575300879384489s"/></polygon>
+<polygon id="2" class="Triangle" points="309.978115072361,40 313.978115072361,50 317.978115072361,40" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'TATCCCAAACGCGCACAGTCTGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(2)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 -30" to="0 0" dur="0.0455000166288926s"/></polygon>
+<polygon id="3" class="Triangle" points="276.374161666078,40 280.374161666078,50 284.374161666078,40" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'TCGGATGGTCTGATCATCGGAGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(3)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 -30" to="0 0" dur="0.51942867952506s"/></polygon>
+<polygon id="4" class="Triangle" points="199.282739145782,30 203.282739145782,40 207.282739145782,30" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'ACCTTTGACCCGCGCGCTCTTGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(4)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 -30" to="0 0" dur="0.958567488097238s"/></polygon>
+<polygon id="5" class="Triangle" points="196.317684433463,40 200.317684433463,50 204.317684433463,40" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'CGCGCTCTTGGTCTCGAATTTGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(5)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 -30" to="0 0" dur="0.33188939177224s"/></polygon>
+<polygon id="6" class="Triangle" points="384.845746558419,40 388.845746558419,50 392.845746558419,40" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'GGATCAACTCTTGGCGAGGGTGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(6)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 -30" to="0 0" dur="0.608598448321558s"/></polygon>
+<polygon id="7"  class="Triangle" points="189.152135545358,100 193.152135545358,90 197.152135545358,100" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'TCGGATTAAGACATCGGAGTCGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(7)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 30" to="0 0" dur="0.463382305015639s"/></polygon>
+<polygon id="8"  class="Triangle" points="374.220967172609,90 378.220967172609,80 382.220967172609,90" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'CATGGGAGGTTGATACCTGCCGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(8)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 30" to="0 0" dur="0.807317176641924s"/></polygon>
+<polygon id="9"  class="Triangle" points="187.669608189199,90 191.669608189199,80 195.669608189199,90" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'CGGGGCTCGGATTAAGACATCGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(9)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 30" to="0 0" dur="0.569820163762788s"/></polygon>
+<polygon id="10"  class="Triangle" points="347.535474761737,90 351.535474761737,80 355.535474761737,90" style="fill:rgb(0,0,255);stroke:black;stroke-width:1" onmousemove="ShowTooltip(evt, 'GTCACGATCGTGGAGTAAACTGG')" onmouseout="HideTooltip(evt)" onclick="ClickTriangle(10)"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 30" to="0 0" dur="0.247909948754341s"/></polygon>
+	<rect class="tooltip_bg" id="tooltip_bg" x="0" y="0" width="85" height="17" visibility="hidden"/>
+	<text class="tooltip" id="tooltip" x="0" y="0" visibility="hidden">Tooltip</text>
+</svg>

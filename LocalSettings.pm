@@ -10,7 +10,7 @@ my $ExpectedTrailingSequence;
 ########################################################################################################################################################################################
 ########################################################################################################################################################################################
 #General settings
-my $Location='Cluster';
+my $Location='Home';
 my $ScreenType='GIN_A';
 my $ExpectedTrailingNucleotides=0; #Set at 0 to include all 
 my $BowtieLocation;
@@ -70,6 +70,9 @@ if($Location eq 'Home') {
 	$BowtieLocation="/home/bastiaan/data/genomestuff/bowtie2-2.1.0/bowtie2";
 	$HumanGenomeLocation="/home/bastiaan/data/genomestuff/hg19";
 	$IndexedHumanGenomeLocation="/home/bastiaan/data/genomestuff/hg19-index";
+	if($NumberOfCoresToUse>8) {
+		$NumberOfCoresToUse=8;
+	}
 }
 else {
 	if($Location eq 'Work') {

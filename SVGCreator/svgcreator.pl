@@ -35,12 +35,12 @@ $Species = 'human' unless $Species = $ScriptOptions{'s'};
 $Species = lc($Species);
 if ($Species eq 'mouse') {
 	$Genome = "mm10";
-	$RefSeqFile = $DirName . "/../refseq/mm10.txt";
+	$RefSeqFile = $DirName . "/../GenomeInfo/mm10.txt";
 }
 else {
 	if ($Species eq 'human') {
 		$Genome = "hg19";
-		$RefSeqFile = $DirName . "/../refseq/hg19.txt";
+		$RefSeqFile = $DirName . "/../GenomeInfo/hg19.txt";
 	}
 	else {
 		die "ERROR in $0: Species $Species is not currently handled by the iKRUNC scripts\n";
