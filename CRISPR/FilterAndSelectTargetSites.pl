@@ -37,7 +37,6 @@ else {
 	}
 }
 $RefSeqFile = "../GenomeInfo/$Genome.txt";
-$QualityFileLocation=$QualityFileLocation . $Genome . "/";
 
 #Extract information from inputfile
 open (IN, $InputFile) or die "ERROR in $0:Could not open inputfile $InputFile\n";
