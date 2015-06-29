@@ -18,7 +18,7 @@
 
 #Only run this script if the end result does not yet exist
 echo Processing $1
-OutputPrefix="/home/NKI/b.evers/bastiaan/gRNAs/CRISPR/epigenetics/qualityfiles"
+OutputPrefix="/home/NKI/b.evers/bastiaan/gRNAs/CRISPR/bladder_TSG/qualityfiles"
 if [ ! -f $OutputPrefix/$1.qualities.4 ]; then
 
 	#First, obtain all valid protospacers for this particular refseq
