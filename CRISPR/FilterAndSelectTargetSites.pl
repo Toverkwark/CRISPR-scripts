@@ -5,13 +5,12 @@ use Cwd 'abs_path';
 use File::Basename;
 
 my ($CDSSearchFraction, $Genome, $StartNeighbourhood, $SelectNumberOfProtospacers, $Species, $RefSeqFile, %ScriptOptions, %Protospacers, %SelectedProtospacers, %ProtospacerSequences, $OutputFile, %GenesToProcess);
-my $QualityFileLocation="output/";
 my $SVGScriptFile="../SVGCreator/svgcreator.pl";
 my $DirName = dirname(abs_path($0));
 
 #Get options passed to script
-print "Usage:$0 -iocenrs\n-i Input file containing Genes and RefSeq IDs\n-o Outputfile. If none given, input filename is used appended with .selectedprotospacers.csv\n-c Determines the fraction of each RefSeq ID to be investigated. Default 1\n-e Determines the amount of nucleotides around the startcodon to include in the search. Default 0, max 150\n-n Number of targets to be found. Default 20\n-s Species (human/mouse). Default human\n";
-getopt( 'iocens', \%ScriptOptions );
+print "Usage:$0 -iocenrsq\n-i Input file containing Genes and RefSeq IDs\n-o Outputfile. If none given, input filename is used appended with .selectedprotospacers.csv\n-c Determines the fraction of each RefSeq ID to be investigated. Default 1\n-e Determines the amount of nucleotides around the startcodon to include in the search. Default 0, max 150\n-n Number of targets to be found. Default 20\n-s Species (human/mouse). Default human\n-q Qualityfile location\n";
+getopt( 'iocensq', \%ScriptOptions );
 die "ERROR in $0: No Inputfile given.\n" unless my $InputFile = $ScriptOptions{'i'};
 $OutputFile = $InputFile . ".selectedprotospacers.csv" unless $OutputFile = $ScriptOptions{'o'};
 $CDSSearchFraction = 1 unless $CDSSearchFraction = $ScriptOptions{'c'};
@@ -19,6 +18,10 @@ $StartNeighbourhood = 0 unless $StartNeighbourhood = $ScriptOptions{'e'};
 die "ERROR in $0: Start neighbourhood can maximally be 150.\n" if ($StartNeighbourhood > 150); 
 $SelectNumberOfProtospacers = 20 unless $SelectNumberOfProtospacers = $ScriptOptions{'n'};
 $Species = 'human' unless $Species = $ScriptOptions{'s'};
+my $QualityFileLocation="output/" unless $QualityFileLocation = $ScriptOptions{'q'};
+if (substr($QualityFileLocation,length($QualityFileLocation)-1,1) ne '/') {
+	$QualityFileLocation = $QualityFileLocation . "/";
+}
 
 #Assign proper genome id
 $Species = lc($Species);
