@@ -226,7 +226,7 @@ foreach my $QueryGene (sort keys %SelectedProtospacers) {
 	my $IDNumber=0;
 	foreach my $ProtospacerSequence (sort keys $SelectedProtospacers{$QueryGene}) {
 		$IDNumber++;
-		print OUT "$QueryGene-$IDNumber\t";
+		print OUT "$QueryGene-$IDNumber\t$QueryGene\t";
 		print OUT $ProtospacerSequence . "\t";
 		print OUT $SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[0] . "\t";
 		print OUT $SelectedProtospacers{$QueryGene}->{$ProtospacerSequence}->[2] . "\t";
