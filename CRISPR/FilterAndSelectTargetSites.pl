@@ -253,15 +253,15 @@ my $CurrentRefSeqID=$_;
 
 
 #Write report
-my $SVGLocation = $OutputFileLocation . "svgs/";
-`mkdir $SVGLocation`;
+
+`mkdir svgs`;
 my $TotalNumberOfProtospacersSelected=0;
 foreach my $QueryGene (sort keys %SelectedProtospacers) {
 	print "$QueryGene:" . (keys $SelectedProtospacers{$QueryGene}) . " protospacers found\n";
 	$TotalNumberOfProtospacersSelected=$TotalNumberOfProtospacersSelected+scalar (keys $SelectedProtospacers{$QueryGene});
 	foreach my $QueryRefSeq (sort keys $NumberOfProtospacersSelected{$QueryGene}) {
 		print "\t" . $NumberOfProtospacersSelected{$QueryGene}->{$QueryRefSeq} . " protospacers map to $QueryRefSeq\n";
-		`perl "$SVGScriptFile" -i $OutputFile -r $QueryRefSeq -o $SVGLocation`;
+		`perl "$SVGScriptFile" -i $OutputFile -r $QueryRefSeq -o svgs/`;
 	}
 }
 print $TotalNumberOfProtospacersSelected . " protospacers selected in total\n";
