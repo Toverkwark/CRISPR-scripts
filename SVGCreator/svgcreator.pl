@@ -78,14 +78,14 @@ my %DisplayObjects;
 while (defined(my $Line = <IN>)) {
 	chomp($Line);
 	my @TargetSites = split( /\t/, $Line );
-	my $TargetChromosome = $TargetSites[2];
-	my $TargetCutSite = $TargetSites[3];
-	my $TargetOrientation = $TargetSites[4];
+	my $TargetChromosome = $TargetSites[3];
+	my $TargetCutSite = $TargetSites[4];
+	my $TargetOrientation = $TargetSites[5];
 	
 	#Verify that the target is in the gene, or within 250nt of the TSS
 	if ($TargetChromosome eq $Chromosome && ($TargetCutSite >= $GeneStart-250 && $TargetCutSite <= $GeneEnd + 250)) {
 		#Verify that the target is targeting the intended RefSeqID
-		my @ListOfTargetRefSeqIDs=split(/,/,$TargetSites[10]);
+		my @ListOfTargetRefSeqIDs=split(/,/,$TargetSites[11]);
 		foreach my $TargetRefSeqID (@ListOfTargetRefSeqIDs) {
 			if($RefSeqID eq $TargetRefSeqID) {
 				@{$DisplayObjects{$TargetOrientation}->{$TargetCutSite}}=@TargetSites;
