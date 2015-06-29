@@ -221,7 +221,7 @@ foreach my $QueryGene (sort keys %Protospacers) {
 #Open output file
 open (OUT, ">", $OutputFile) or die "ERROR in $0: Cannot open outputfile $OutputFile\n";
 #Write output
-print OUT "Gene\tSequence\tChromosome\tLocation\tOrientation\tIdentical 3' targets\tOf which near exons\tDegree\tRelatives\tOf which near exons\tPresent in RefSeqs\n";
+print OUT "ID\tGene\tSequence\tChromosome\tLocation\tOrientation\tIdentical 3' targets\tOf which near exons\tDegree\tRelatives\tOf which near exons\tPresent in RefSeqs\n";
 foreach my $QueryGene (sort keys %SelectedProtospacers) {
 	my $IDNumber=0;
 	foreach my $ProtospacerSequence (sort keys $SelectedProtospacers{$QueryGene}) {
