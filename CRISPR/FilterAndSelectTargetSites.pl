@@ -4,7 +4,7 @@ use strict;
 use Cwd 'abs_path';
 use File::Basename;
 
-my ($CDSSearchFraction, $Genome, $StartNeighbourhood, $SelectNumberOfProtospacers, $Species, $RefSeqFile, %ScriptOptions, %Protospacers, %SelectedProtospacers, %ProtospacerSequences, $OutputFile, %GenesToProcess);
+my ($CDSSearchFraction, $Genome, $StartNeighbourhood, $SelectNumberOfProtospacers, $Species, $RefSeqFile, %ScriptOptions, %Protospacers, %SelectedProtospacers, %ProtospacerSequences, $OutputFile, %GenesToProcess, $QualityFileLocation);
 my $SVGScriptFile="../SVGCreator/svgcreator.pl";
 my $DirName = dirname(abs_path($0));
 
@@ -18,7 +18,7 @@ $StartNeighbourhood = 0 unless $StartNeighbourhood = $ScriptOptions{'e'};
 die "ERROR in $0: Start neighbourhood can maximally be 150.\n" if ($StartNeighbourhood > 150); 
 $SelectNumberOfProtospacers = 20 unless $SelectNumberOfProtospacers = $ScriptOptions{'n'};
 $Species = 'human' unless $Species = $ScriptOptions{'s'};
-my $QualityFileLocation="output/" unless $QualityFileLocation = $ScriptOptions{'q'};
+$QualityFileLocation="output/" unless $QualityFileLocation = $ScriptOptions{'q'};
 if (substr($QualityFileLocation,length($QualityFileLocation)-1,1) ne '/') {
 	$QualityFileLocation = $QualityFileLocation . "/";
 }
