@@ -129,14 +129,14 @@ foreach my $Orientation (keys %DisplayObjects) {
 		}
 		my $RelativeMarkerPosition=1400*$CodingSequencePosition/$mRNASize;
 		$RelativeMarkerPosition=$RelativeMarkerPosition+100;	
-		$DisplayObjects{$Orientation}->{$TargetCutSite}->[11]=$RelativeMarkerPosition;
+		$DisplayObjects{$Orientation}->{$TargetCutSite}->[12]=$RelativeMarkerPosition;
 	}
 }
 
 #Determine and assign colors
 foreach my $Orientation (keys %DisplayObjects) {
 	foreach my $TargetCutSite (keys $DisplayObjects{$Orientation}) { 
-		$DisplayObjects{$Orientation}->{$TargetCutSite}->[12]="0,0,255";
+		$DisplayObjects{$Orientation}->{$TargetCutSite}->[13]="0,0,255";
 	}
 }
 		
@@ -151,8 +151,8 @@ foreach my $Orientation (keys %DisplayObjects) {
 		$CollisionsDetected = 0;
 		foreach my $TargetCutSite (keys $DisplayObjects{$Orientation}) {
 			my $CollisionDetectedForThisTarget = 0;
-			my $RelativeMarkerPosition=$DisplayObjects{$Orientation}->{$TargetCutSite}->[11];
-			if(!($DisplayObjects{$Orientation}->{$TargetCutSite}->[13])) {
+			my $RelativeMarkerPosition=$DisplayObjects{$Orientation}->{$TargetCutSite}->[12];
+			if(!($DisplayObjects{$Orientation}->{$TargetCutSite}->[14])) {
 				if($AllPositions{$CollisionLevel}) {
 					foreach my $Position (keys $AllPositions{$CollisionLevel}) {
 						if ($RelativeMarkerPosition <= ($Position+$CollisionWidth) && $RelativeMarkerPosition >= ($Position-$CollisionWidth)) {
@@ -165,7 +165,7 @@ foreach my $Orientation (keys %DisplayObjects) {
 				}
 				if (!$CollisionDetectedForThisTarget) {
 					$AllPositions{$CollisionLevel}->{$RelativeMarkerPosition}++;
-					$DisplayObjects{$Orientation}->{$TargetCutSite}->[13]=$CollisionLevel;
+					$DisplayObjects{$Orientation}->{$TargetCutSite}->[14]=$CollisionLevel;
 				}
 			}
 		}
@@ -241,19 +241,19 @@ foreach my $Orientation (keys %DisplayObjects) {
 	#Loop through all cut sites sorted by score
 	foreach my $TargetCutSite (sort {$DisplayObjects{$Orientation}->{$a}->[0] cmp $DisplayObjects{$Orientation}->{$b}->[0]} keys $DisplayObjects{$Orientation}) {		
 		my @TargetSites = @{$DisplayObjects{$Orientation}->{$TargetCutSite}};		
-		my $TargetChromosome = $TargetSites[2];
-		my $TargetCutSite = $TargetSites[3];
-		my $TargetOrientation = $TargetSites[4];
-		my $TargetSequence=$TargetSites[1];
-		my $TargetNumberOfIdentical3PrimeTargets=$TargetSites[5];
-		my $TargetNumberOfIdentical3PrimeTargetsNearExons=$TargetSites[6];
-		my $TargetDegree=$TargetSites[7];
-		my $TargetClosestRelatives=$TargetSites[8];
-		my $TargetClosestRelativesNearExons=$TargetSites[9];
+		my $TargetChromosome = $TargetSites[3];
+		my $TargetCutSite = $TargetSites[4];
+		my $TargetOrientation = $TargetSites[5];
+		my $TargetSequence=$TargetSites[2];
+		my $TargetNumberOfIdentical3PrimeTargets=$TargetSites[6];
+		my $TargetNumberOfIdentical3PrimeTargetsNearExons=$TargetSites[7];
+		my $TargetDegree=$TargetSites[8];
+		my $TargetClosestRelatives=$TargetSites[9];
+		my $TargetClosestRelativesNearExons=$TargetSites[10];
 		$TargetID=$TargetID+1;		
-		my $RelativeMarkerPosition=$TargetSites[11];
-		my $TriangleColor=$TargetSites[12];
-		my $LayerOffset = $LevelOffset*(($TargetSites[13]) - 1);
+		my $RelativeMarkerPosition=$TargetSites[12];
+		my $TriangleColor=$TargetSites[13];
+		my $LayerOffset = $LevelOffset*(($TargetSites[14]) - 1);
 		my $TargetLabel = $TargetSequence;
 		if($Orientation eq '+') {
 			$SVGFile = $SVGFile . "<polygon id=\"" . $TargetID . "\" class=\"Triangle\" points=\"" . ($RelativeMarkerPosition - $TriangleWidth) . "\," . ($YOffset-$LayerOffset-$TriangleHeight) . " " . $RelativeMarkerPosition . "\," . ($YOffset-$LayerOffset) . " " . ($RelativeMarkerPosition+$TriangleWidth) . "\," . ($YOffset-$LayerOffset-$TriangleHeight) . "\" style=\"fill:rgb(" . $TriangleColor . ");stroke:black;stroke-width:1\" onmousemove=\"ShowTooltip(evt, \'" . $TargetLabel . "\')\" onmouseout=\"HideTooltip(evt)\" onclick=\"ClickTriangle(" . $TargetID . ")\">";
