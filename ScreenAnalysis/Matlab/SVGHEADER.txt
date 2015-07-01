@@ -1,1 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" onload="init(evt)" width="100%" height="100%" viewBox="-10 -10 1040 520">
+<script type="text/ecmascript">
+	<![CDATA[
+	function init(evt) {
+		if ( window.svgDocument == null ) {
+			svgDocument = evt.target.ownerDocument;
+		}
+		tooltip = svgDocument.getElementById("tooltip");
+		tooltip_bg = svgDocument.getElementById("tooltip_bg");
+	}
+	
+	function ClickDetected(evt) {
+		var QueryGene=evt.target.className.baseVal;
+		SwapGeneSelection(evt, QueryGene);
+	}
+	
+	function SwapGeneSelection(evt, QueryGene) {
+		if ( window.svgDocument == null ) {
+			svgDoc = evt.target.ownerDocument;
+		}
+		var CurrentGenes=document.getElementsByClassName(QueryGene);
+		var CurrentGeneStatus="no";
+		for (var i = 0; i < CurrentGenes.length; i++) { 
+			if(CurrentGenes[i].getAttribute("selected")=="yes") {
+				CurrentGeneStatus="yes";
+			} 
+		}
+		
+		for (var i = 0; i < CurrentGenes.length; i++) { 
+    		if ( CurrentGeneStatus == "no" ) { 
+				var CurrentSize=CurrentGenes[i].getAttribute("pixelsize");
+        		CurrentGenes[i].setAttribute("r",CurrentSize*2);
+				CurrentGenes[i].setAttribute("stroke-width",2);
+				CurrentGenes[i].setAttribute("selected","yes");
+    		}
+			else {
+				var CurrentSize=CurrentGenes[i].getAttribute("pixelsize");
+				CurrentGenes[i].setAttribute("r",CurrentSize);
+				CurrentGenes[i].setAttribute("stroke-width",0.2);
+				CurrentGenes[i].setAttribute("selected","no");
+			}
+		}		
+		
+		for (var i = CurrentGenes.length-1; i >= 0; i--) { 
+			svgDoc.documentElement.appendChild(CurrentGenes[i]);
+    	}
+	}
+	
+	function ShowTooltip(evt, mouseovertext) {
+		var svg = document.querySelector('svg');
+		svgDoc = evt.target.ownerDocument;
+		var pt=svg.createSVGPoint();
+		pt.x = evt.clientX+25; pt.y = evt.clientY+15;
+        pt=pt.matrixTransform(svg.getScreenCTM().inverse());
+		
+		tooltip.firstChild.data = mouseovertext;
+		length = tooltip.getComputedTextLength()+5;
+		tooltip.setAttributeNS(null,"x",(pt.x));
+		tooltip.setAttributeNS(null,"y",(pt.y));
+		tooltip.setAttributeNS(null,"visibility","visible");
+		tooltip_bg.setAttributeNS(null,"width",length);
+		tooltip_bg.setAttributeNS(null,"x",(pt.x-2));
+		tooltip_bg.setAttributeNS(null,"y",(pt.y-9));
+		tooltip_bg.setAttributeNS(null,"visibility","visible");
+		svgDoc.documentElement.appendChild(tooltip_bg);
+		svgDoc.documentElement.appendChild(tooltip);
+	}
+
+	function HideTooltip(evt) {
+		tooltip.setAttributeNS(null,"visibility","hidden");
+		tooltip_bg.setAttributeNS(null,"visibility","hidden");
+	}
+	
+
+	function MouseOverDetected(evt) {
+		var CurrentSize=evt.target.getAttribute("pixelsize");
+		evt.target.setAttribute("r",CurrentSize*2);
+		var CurrentGene=evt.target.getAttribute("class");
+		ShowTooltip(evt,evt.target.className.baseVal+"-"+evt.target.getAttribute("libraryid"));
+		
+	}
+
+	function MouseOutDetected(evt) {
+		if(evt.target.getAttribute("selected") == "no") {
+			var CurrentSize=evt.target.getAttribute("pixelsize");
+			evt.target.setAttribute("r",CurrentSize);
+		} 
+		HideTooltip(evt);
+	}
+	
+	function SearchForGene(evt) {
+		var QueryGene = prompt("Please enter the gene you're looking for");
+		SwapGeneSelection(evt, QueryGene);
+	}
+	]]>
+</script>
+
+
+<rect x="700" y="0" width="70" height="15" style="fill: #ffffff; stroke:#000000; stroke-width: 0.2;" onclick="SearchForGene(evt)"/>
+<text font-family="Arial" font-size="8" x="705" y="9" onclick="SearchForGene(evt)">Search gene...</text>
+<rect class="tooltip_bg" id="tooltip_bg" x="0" y="0" width="85" height="12" visibility="hidden" style="fill: #ffffcc; stroke: #000000; stroke-width: 0.2;"/>
+<text class="tooltip" id="tooltip" font-family="Arial" font-size="8" x="0" y="0" visibility="hidden">Tooltip</text>
 
