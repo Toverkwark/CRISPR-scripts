@@ -90,7 +90,7 @@
 	
 	function SearchForGene(evt) {
 		var QueryGene = prompt("Please enter the gene you're looking for");
-		SwapGeneSelection(evt, QueryGene);
+		SwapGeneSelection(evt, QueryGene.toUpperCase());
 	}
 	]]>
 </script>
