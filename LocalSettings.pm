@@ -10,8 +10,8 @@ my $ExpectedTrailingSequence;
 ########################################################################################################################################################################################
 ########################################################################################################################################################################################
 #General settings
-my $Location='Work';
-my $ScreenType='GIN_A';
+my $Location='Cluster';
+my $ScreenType='iKRUNCv1';
 my $ExpectedTrailingNucleotides=0; #Set at 0 to include all 
 my $BowtieLocation;
 my $HumanGenomeLocation;
