@@ -37,7 +37,7 @@ while (defined (my $Line=<IN>)) {
 		#Add 10 points for every other transcript it hits close to the TSS
 		#Add 1 point for every other transcript it hits
 		foreach (@Positions) {
-			if ($_ <=100 && $_ >=-25) {
+			if ($_ <=100 && $_ >=25) {
 				$PotentialGuides{$LineValues[0]}->{$Transcripts[$i]}->{$LineValues[1]}->{'Score'}=$PotentialGuides{$LineValues[0]}->{$Transcripts[$i]}->{$LineValues[1]}->{'Score'}+10;
 			}
 			else {
