@@ -10,8 +10,8 @@ my $ExpectedTrailingSequence;
 ########################################################################################################################################################################################
 ########################################################################################################################################################################################
 #General settings
-my $Location='Work';
-my $ScreenType='GIN_A';
+my $Location='Cluster';
+my $ScreenType='LC2.1';
 my $ExpectedTrailingNucleotides=0; #Set at 0 to include all 
 my $BowtieLocation;
 my $HumanGenomeLocation;
@@ -40,6 +40,7 @@ if($ScreenType eq 'LC2.1') {
 	#For GECKO v2.1 Libraries:
 	$ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
 	$ExpectedTrailingSequence = "GTTTAAGAGCTAGAAATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
+	$ExpectedTrailingSequence=""; 
 }
 if($ScreenType eq 'iKRUNCv1') {
 	#For iKRUNC v1 Libraries:
