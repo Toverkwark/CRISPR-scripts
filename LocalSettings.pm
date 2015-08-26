@@ -10,7 +10,7 @@ my $ExpectedTrailingSequence;
 ########################################################################################################################################################################################
 ########################################################################################################################################################################################
 #General settings
-my $Location='Work';
+my $Location='Cluster';
 my $ScreenType='GIN_A';
 my $ExpectedTrailingNucleotides=0; #Set at 0 to include all 
 my $BowtieLocation;
@@ -30,6 +30,7 @@ if($ScreenType eq 'GIN_A') {
         #For CRISPRi Libraries clone into pGIN_A:
         $ExpectedLeadingSequence = "CCCTTGGAGAAAAGCCTTGTTTG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
         $ExpectedTrailingSequence = "GTTTAAGAGCTAGAAA"; #Sequence that is expected to come after the gRNA/shRNA sequence
+	$ExpectedTrailingSequence = "";
 }
 if($ScreenType eq 'Geckov2') {
 	#For GECKO v2 Libraries:
