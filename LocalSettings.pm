@@ -31,6 +31,11 @@ if($ScreenType eq 'GIN_A') {
         $ExpectedLeadingSequence = "CCCTTGGAGAAAAGCCTTGTTTG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
         $ExpectedTrailingSequence = "GTTTAAGAGCTAGAAA"; #Sequence that is expected to come after the gRNA/shRNA sequence
 }
+if($ScreenType eq 'GIN_B') {
+        #For Libraries cloned into pGIN_B:
+        $ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+        $ExpectedTrailingSequence = "GTTTAAGAGCTATGCTGGAAACAGCATAGCAAGTTTAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTT"; #Sequence that is expected to come after the gRNA/shRNA sequence
+}
 if($ScreenType eq 'Geckov2') {
 	#For GECKO v2 Libraries:
 	$ExpectedLeadingSequence = "GGCTTTATATATCTTGTGGAAAGGACGAAACACCG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
