@@ -87,10 +87,10 @@ else {
 	}
 	else {
 	        if($Location eq 'Cluster') {
-			use lib "/home/NKI/b.evers/perl5/lib/perl5";
+			use lib "/home/NFS/users/NKI/b.evers/perl5/lib/perl5";
 	                $BowtieLocation="bowtie2";
-        	        $HumanGenomeLocation="/home/NKI/b.evers/Genomes/hg19/genome-fasta";
-                	$IndexedHumanGenomeLocation="/home/NKI/b.evers/Genomes/hg19/genome-index/hg19";
+        	        $HumanGenomeLocation="/home//NFS/users/b.evers/Genomes/hg19/genome-fasta";
+                	$IndexedHumanGenomeLocation="/home//NFS/users/b.evers/Genomes/hg19/genome-index/hg19";
 		}
         }
 
