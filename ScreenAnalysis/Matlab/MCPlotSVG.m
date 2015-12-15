@@ -1,11 +1,18 @@
 function MCPlotSVG(Treated,Control,LibraryIDs,Genes,Colors,FileName)
 HorizontalPixels=666;
 VerticalPixels=500;
-MinimalX=0;
+MinimalX=5;
 MaximalX=15;
-MinimalY=-10;
-MaximalY=10;
-PixelSize=2;
+if(findstr('UMUC',FileName))
+    MaximalX=16;
+end
+MinimalY=-9;
+MaximalY=9;
+PixelSize=3;
+XOffset=10;
+YInterval=0.2;
+HistogramOffset=10;
+HistogramWidth=150;
 
 %Add 1 to everything to prevent log problems
 Treated=Treated+1;
@@ -21,29 +28,48 @@ Line=fgetl(fID);
 i=0;
 while ischar(Line)
     i=i+1;
-    OutputText{i}=[Line LineFeed];
+    Header{i}=[Line LineFeed];
     Line=fgetl(fID);
 end
 fclose(fID);
-OutputText=OutputText';
-
+Header=Header';
 %Create axes
-OutputText=[OutputText;'<line x1="0" y1="0" x2="' num2str(HorizontalPixels)  '" y2="0" stroke-width="0.5" stroke="black" />' LineFeed];
-OutputText=[OutputText;'<line x1="0" y1="0" x2="0" y2="' num2str(VerticalPixels) '" stroke-width="0.5" stroke="black" />' LineFeed];
-OutputText=[OutputText;'<line x1="' num2str(HorizontalPixels) '" y1="0" x2="' num2str(HorizontalPixels) '" y2="' num2str(VerticalPixels) '" stroke-width="0.5" stroke="black" />' LineFeed];
-OutputText=[OutputText;'<line x1="0" y1="' num2str(VerticalPixels) '" x2="' num2str(HorizontalPixels) '" y2="' num2str(VerticalPixels) '" stroke-width="0.5" stroke="black" />' LineFeed];
-for i=MinimalY:MaximalY-1 
+Header=[Header;'<line x1="' num2str(XOffset) '" y1="0" x2="' num2str(HorizontalPixels+XOffset)  '" y2="0" stroke-width="0.5" stroke="black" />' LineFeed];
+Header=[Header;'<line x1="' num2str(XOffset) '" y1="0" x2="' num2str(XOffset) '" y2="' num2str(VerticalPixels) '" stroke-width="0.5" stroke="black" />' LineFeed];
+Header=[Header;'<line x1="' num2str(HorizontalPixels+XOffset) '" y1="0" x2="' num2str(HorizontalPixels+XOffset) '" y2="' num2str(VerticalPixels) '" stroke-width="0.5" stroke="black" />' LineFeed];
+Header=[Header;'<line x1="' num2str(XOffset) '" y1="' num2str(VerticalPixels) '" x2="' num2str(HorizontalPixels+XOffset) '" y2="' num2str(VerticalPixels) '" stroke-width="0.5" stroke="black" />' LineFeed];
+for i=MinimalY:MaximalY 
 	VerticalLevel=(-i-MinimalY)*VerticalPixels/(MaximalY-MinimalY);
-	OutputText=[OutputText;'<line x1="0" y1="' num2str(VerticalLevel) '" x2="' num2str(HorizontalPixels) '" y2="' num2str(VerticalLevel) '" stroke-width=".2" stroke="black" />' LineFeed];
-	OutputText=[OutputText;'<text font-family="Arial" font-size="8" x="' num2str(0.005*HorizontalPixels) '" y="' num2str(VerticalLevel-0.005*VerticalPixels) '">' num2str(i) '</text>' LineFeed];
+	Header=[Header;'<line x1="' num2str(XOffset) '" y1="' num2str(VerticalLevel) '" x2="' num2str(HorizontalPixels+XOffset) '" y2="' num2str(VerticalLevel) '" stroke-width=".2" stroke="black" />' LineFeed];
+	YAxisLabel=num2str(i);
+    if(i==MinimalY)
+        YAxisLabel=['&#8804;' num2str(i)];
+    else
+        if(i==MaximalY)
+            YAxisLabel=['&#8805;' num2str(i)];
+        else
+            YAxisLabel=num2str(i);
+        end
+    end
+    Header=[Header;'<text font-family="Arial" font-size="8" x="5" y="' num2str(VerticalLevel+0.005*VerticalPixels) '" text-anchor="end">' YAxisLabel '</text>' LineFeed];
     if i==0
-        OutputText=[OutputText;'<line x1="0" y1="' num2str(VerticalLevel) '" x2="' num2str(HorizontalPixels) '" y2="' num2str(VerticalLevel) '" stroke-width="2" stroke="black" />' LineFeed];
+        Header=[Header;'<line x1="' num2str(XOffset) '" y1="' num2str(VerticalLevel) '" x2="' num2str(HorizontalPixels+XOffset) '" y2="' num2str(VerticalLevel) '" stroke-width="2" stroke="black" />' LineFeed];
     end
 end
-for i=MinimalX+1:MaximalX
-	HorizontalLevel=(i-MinimalX)*HorizontalPixels/(MaximalX-MinimalX);
-	OutputText=[OutputText;'<line y1="0" x1="' num2str(HorizontalLevel) '" y2="' num2str(VerticalPixels) '" x2="' num2str(HorizontalLevel) '" stroke-width=".2" stroke="black" />' LineFeed];
-	OutputText=[OutputText;'<text font-family="Arial" font-size="8" x="' num2str(HorizontalLevel-0.005*HorizontalPixels) '" y="' num2str(-0.005*VerticalPixels) '">' num2str(i) '</text>' LineFeed];
+for i=MinimalX:MaximalX
+	HorizontalLevel=XOffset+((i-MinimalX)*HorizontalPixels/(MaximalX-MinimalX));
+	Header=[Header;'<line y1="0" x1="' num2str(HorizontalLevel) '" y2="' num2str(VerticalPixels) '" x2="' num2str(HorizontalLevel) '" stroke-width=".2" stroke="black" />' LineFeed];
+    XAxisLabel=num2str(i);
+    if(i==MinimalX)
+        XAxisLabel=['&#8804;' num2str(i)];
+    else
+        if(i==MaximalX)
+            XAxisLabel=['&#8805;' num2str(i)];
+        else
+            XAxisLabel=num2str(i);
+        end
+    end
+	Header=[Header;'<text font-family="Arial" font-size="8" x="' num2str(HorizontalLevel) '" y="' num2str(-0.005*VerticalPixels) '" text-anchor="middle">' XAxisLabel '</text>' LineFeed];
 end
 %Write dots
 XPosition=(A-MinimalX).*(HorizontalPixels/(MaximalX-MinimalX));
@@ -54,8 +80,8 @@ YPosition=max(YPosition,0);
 YPosition=min(YPosition,VerticalPixels);
 
 %Map colors if necessary
-CurrentColormap=[[0 0 1]; [1 0 0]; [0 1 0]];
-% Colors=Colors';
+CurrentColormap=[[0.9 0.6 0];[0.35 0.7 0.9]];
+Colors=Colors';
 % CurrentColormap=jet;
 if(size(Colors,2)==1)
     MinColor=min(Colors);
@@ -71,13 +97,53 @@ else
     MappedColors=Colors;
 end
 
+OutputText{size(A,1)}='';
 for i=1:size(A,1)
     FillColor=floor(MappedColors(i,:).*255+0.5);
-	OutputText=[OutputText;'<circle class="' Genes{i} '" pixelsize="' num2str(PixelSize) '" libraryid="' LibraryIDs{i} '" selected="no" cx="' num2str(XPosition(i)) '" cy="' num2str(YPosition(i)) '" r="' num2str(PixelSize) '" stroke="black" stroke-width=".1" fill="rgb(' num2str(FillColor(1)) ',' num2str(FillColor(2)) ',' num2str(FillColor(3)) ')" onclick="ClickDetected(evt)" onmouseover="MouseOverDetected(evt)" onmouseout="MouseOutDetected(evt)"/>' LineFeed];
+	OutputText{i}=['<circle class="' Genes{i} '" pixelsize="' num2str(PixelSize) '" libraryid="' LibraryIDs{i} '" selected="no" cx="' num2str(XPosition(i)+XOffset) '" cy="' num2str(YPosition(i)) '" r="' num2str(PixelSize) '" stroke="black" stroke-width=".1" fill="rgb(' num2str(FillColor(1)) ',' num2str(FillColor(2)) ',' num2str(FillColor(3)) ')" onclick="ClickDetected(evt)" onmouseover="MouseOverDetected(evt)" onmouseout="MouseOutDetected(evt)"/>' LineFeed];
 end
 
+%Plot histogram
+[n1,xout]=hist(M(find(Colors==1)),MinimalY:YInterval:MaximalY);
+[n2,xout]=hist(M(find(Colors==2)),MinimalY:YInterval:MaximalY);
+binwidths = diff([MinimalY xout(1:end-1)+diff(xout)/2 MaximalY]);
+n1 = n1/sum (n1 .* binwidths);
+n2 = n2/sum (n2 .* binwidths);
+
+% MaxPeak=max(max(n1),max(n2));
+Path1='<path d="';
+for i=1:size(xout,2)
+    PlotYPosition=(xout(i)-MinimalY).*(VerticalPixels/(MaximalY-MinimalY));
+    PlotXPosition=XOffset+HorizontalPixels+HistogramOffset+(HistogramWidth*n1(i)./sum(n1));
+    FillColor=floor(CurrentColormap(1,:).*255+0.5);
+    if (i==1) 
+        Path1=[Path1 'M ' num2str(PlotXPosition) ' ' num2str(PlotYPosition) ' '];
+    else
+        Path1=[Path1 'L ' num2str(PlotXPosition) ' ' num2str(PlotYPosition) ' '];
+    end
+end
+Path1=[Path1 '" stroke="rgb(' num2str(FillColor(1)) ',' num2str(FillColor(2)) ',' num2str(FillColor(3)) ')" stroke-width="2" fill="none"/>' LineFeed];
+Path2='<path d="';
+for i=1:size(xout,2)
+    PlotYPosition=(xout(i)-MinimalY).*(VerticalPixels/(MaximalY-MinimalY));
+    PlotXPosition=XOffset+HorizontalPixels+HistogramOffset+(HistogramWidth*n2(i)./sum(n2));
+    FillColor=floor(CurrentColormap(2,:).*255+0.5);
+    if (i==1) 
+        Path2=[Path2 'M ' num2str(PlotXPosition) ' ' num2str(PlotYPosition) ' '];
+    else
+        Path2=[Path2 'L ' num2str(PlotXPosition) ' ' num2str(PlotYPosition) ' '];
+    end
+end
+Path2=[Path2 '" stroke="rgb(' num2str(FillColor(1)) ',' num2str(FillColor(2)) ',' num2str(FillColor(3)) ')" stroke-width="2" fill="none"/>' LineFeed];
+OutputText{size(OutputText,2)+1}=Path2;
+OutputText{size(OutputText,2)+1}=Path1;
+
 %Write outputfile
+OutputText=OutputText';
 fID=fopen(FileName,'w+');
+for i=1:size(Header,1)
+    fwrite(fID,Header{i});
+end
 for i=1:size(OutputText,1)
     fwrite(fID,OutputText{i});
 end
