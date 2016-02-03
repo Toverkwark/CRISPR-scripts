@@ -1,14 +1,14 @@
 function MCPlotSVG(Treated,Control,LibraryIDs,Genes,Colors,FileName)
 HorizontalPixels=666;
 VerticalPixels=500;
-MinimalX=5;
-MaximalX=15;
+MinimalX=4;
+MaximalX=12;
 if(findstr('UMUC',FileName))
     MaximalX=16;
 end
-MinimalY=-9;
-MaximalY=9;
-PixelSize=3;
+MinimalY=-3;
+MaximalY=3;
+PixelSize=2;
 XOffset=10;
 YInterval=0.2;
 HistogramOffset=10;
@@ -80,7 +80,7 @@ YPosition=max(YPosition,0);
 YPosition=min(YPosition,VerticalPixels);
 
 %Map colors if necessary
-CurrentColormap=[[0.9 0.6 0];[0.35 0.7 0.9]];
+CurrentColormap=[[0 0.6 0.5];[0.9 0.6 0];[0.35 0.7 0.9]];
 Colors=Colors';
 % CurrentColormap=jet;
 if(size(Colors,2)==1)
@@ -97,24 +97,30 @@ else
     MappedColors=Colors;
 end
 
+%Write all the dots
 OutputText{size(A,1)}='';
 for i=1:size(A,1)
     FillColor=floor(MappedColors(i,:).*255+0.5);
-	OutputText{i}=['<circle class="' Genes{i} '" pixelsize="' num2str(PixelSize) '" libraryid="' LibraryIDs{i} '" selected="no" cx="' num2str(XPosition(i)+XOffset) '" cy="' num2str(YPosition(i)) '" r="' num2str(PixelSize) '" stroke="black" stroke-width=".1" fill="rgb(' num2str(FillColor(1)) ',' num2str(FillColor(2)) ',' num2str(FillColor(3)) ')" onclick="ClickDetected(evt)" onmouseover="MouseOverDetected(evt)" onmouseout="MouseOutDetected(evt)"/>' LineFeed];
+    %Comment out this if end statement for only plotting controls
+%     if(sum(MappedColors(i,:)~=CurrentColormap(1,:))>0)
+        OutputText{i}=['<circle class="' Genes{i} '" pixelsize="' num2str(PixelSize) '" libraryid="' LibraryIDs{i} '" selected="no" cx="' num2str(XPosition(i)+XOffset) '" cy="' num2str(YPosition(i)) '" r="' num2str(PixelSize) '" stroke="black" stroke-width=".1" fill="rgb(' num2str(FillColor(1)) ',' num2str(FillColor(2)) ',' num2str(FillColor(3)) ')" onclick="ClickDetected(evt)" onmouseover="MouseOverDetected(evt)" onmouseout="MouseOutDetected(evt)"/>' LineFeed];
+%     end
 end
 
 %Plot histogram
-[n1,xout]=hist(M(find(Colors==1)),MinimalY:YInterval:MaximalY);
-[n2,xout]=hist(M(find(Colors==2)),MinimalY:YInterval:MaximalY);
-binwidths = diff([MinimalY xout(1:end-1)+diff(xout)/2 MaximalY]);
-n1 = n1/sum (n1 .* binwidths);
-n2 = n2/sum (n2 .* binwidths);
+[n1,xout]=hist(M(find(Colors==0)),MinimalY:YInterval:MaximalY);
+[n2,xout]=hist(M(find(Colors==1)),MinimalY:YInterval:MaximalY);
+[n3,xout]=hist(M(find(Colors==2)),MinimalY:YInterval:MaximalY);
+% binwidths = diff([MinimalY xout(1:end-1)+diff(xout)/2 MaximalY]);
+n1 = n1./sum (n1);
+n2 = n2./sum (n2);
+n3 = n3./sum (n3);
 
 % MaxPeak=max(max(n1),max(n2));
 Path1='<path d="';
 for i=1:size(xout,2)
     PlotYPosition=(xout(i)-MinimalY).*(VerticalPixels/(MaximalY-MinimalY));
-    PlotXPosition=XOffset+HorizontalPixels+HistogramOffset+(HistogramWidth*n1(i)./sum(n1));
+    PlotXPosition=XOffset+HorizontalPixels+HistogramOffset+(HistogramWidth*n1(i));
     FillColor=floor(CurrentColormap(1,:).*255+0.5);
     if (i==1) 
         Path1=[Path1 'M ' num2str(PlotXPosition) ' ' num2str(PlotYPosition) ' '];
@@ -126,7 +132,7 @@ Path1=[Path1 '" stroke="rgb(' num2str(FillColor(1)) ',' num2str(FillColor(2)) ',
 Path2='<path d="';
 for i=1:size(xout,2)
     PlotYPosition=(xout(i)-MinimalY).*(VerticalPixels/(MaximalY-MinimalY));
-    PlotXPosition=XOffset+HorizontalPixels+HistogramOffset+(HistogramWidth*n2(i)./sum(n2));
+    PlotXPosition=XOffset+HorizontalPixels+HistogramOffset+(HistogramWidth*n2(i));
     FillColor=floor(CurrentColormap(2,:).*255+0.5);
     if (i==1) 
         Path2=[Path2 'M ' num2str(PlotXPosition) ' ' num2str(PlotYPosition) ' '];
@@ -135,6 +141,20 @@ for i=1:size(xout,2)
     end
 end
 Path2=[Path2 '" stroke="rgb(' num2str(FillColor(1)) ',' num2str(FillColor(2)) ',' num2str(FillColor(3)) ')" stroke-width="2" fill="none"/>' LineFeed];
+Path3='<path d="';
+for i=1:size(xout,2)
+    PlotYPosition=(xout(i)-MinimalY).*(VerticalPixels/(MaximalY-MinimalY));
+    PlotXPosition=XOffset+HorizontalPixels+HistogramOffset+(HistogramWidth*n3(i));
+    FillColor=floor(CurrentColormap(3,:).*255+0.5);
+    if (i==1) 
+        Path3=[Path3 'M ' num2str(PlotXPosition) ' ' num2str(PlotYPosition) ' '];
+    else
+        Path3=[Path3 'L ' num2str(PlotXPosition) ' ' num2str(PlotYPosition) ' '];
+    end
+end
+Path3=[Path3 '" stroke="rgb(' num2str(FillColor(1)) ',' num2str(FillColor(2)) ',' num2str(FillColor(3)) ')" stroke-width="2" fill="none"/>' LineFeed];
+
+OutputText{size(OutputText,2)+1}=Path3;
 OutputText{size(OutputText,2)+1}=Path2;
 OutputText{size(OutputText,2)+1}=Path1;
 
