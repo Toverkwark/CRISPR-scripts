@@ -1,236 +1,302 @@
-function ProcessScreen(ReadCountFile,ConstructStatisticsFile,AggregateStatisticsFile,ControlSamples,TreatedSamples,SampleNames,MCPlotName)
-EssentialGenes={'RPS9';'RPS8';'RPS7';'RPS3A';'RPS27';'RPS24';'RPS19';'RPS17';'RPS13';'RPS11';'RPLP1';'RPL9';'RPL6';'RPL5';'RPL36';'RPL35A';'RPL34';'RPL30';'RPL3';'RPL27';'RPL19';'RPL18A';'RPL11';'PSMD7';'PSMD6';'PSMD11';'PSMD1';'PSMC4';'PSMC2';'PSMC1';'PSMB3';'PSMB2';'PSMA3';'POLR2F';'POLR2D';'POLR2A';'POLA1';'NUP98';'NUP93';'NUP54';'NUP205';'NUP133';'KPNB1';'COPZ1';'COPS8';'COPS6';'COPS4';'COPS2';'COPB1';'COPA';};
-NonEssentialGenes={'CRYGB';'KRT77';'DMRTB1';'POTEA';'NLRP5';'VN1R5';'OR9Q2';'TAAR8';'OR12D2';'LUZP4';'TGM6';'SAGE1';'TPH2';'LHX5';'TAS2R13';'VN1R2';'DEFB129';'RXFP2';'ADH7';'DMRTC2';'RNASE9';'ABCG8';'PLA2G2E';'KRT74';'IL22';'DPCR1';'TAAR1';'TAS2R9';'CYP7A1';'MAGEB3';'NPSR1';'OLIG2';'MRGPRD';'CABP5';'POU4F2';'OR52E8';'TRIM42';'OC90';'HTR3D';'RPTN';'IL1F10';'LYZL6';'OTUD6A';'KRT25';'KRT9';'FCRL4';'SPATA16';'NPHS2';'FAM71B';'PIWIL3';};
-NumberOfSamples=size(ControlSamples,2)+size(TreatedSamples,2);
+sub ProcessReads($$$$$$$$$) {
+	my ($InputFile,$BarcodeLength,$BarcodeOffset,$ExpectedInsertLength,$ExpectedLeadingSequence,$ExpectedTrailingSequence,$ErrorThresholdLeading,$ErrorThresholdTrailing,$Library,@Barcodes) = @_;
+	my %LeadingErrors;
+	my %TrailingErrors;
+	my %InsertLengths;
+	my %InsertCounts;
+	my %PerfectInsertCounts;
+	my %QualitiesByBarcode;
+	my %Results;
+	my $RecordsAnalyzed=0;
+	my $NotAnalyzed;
+		
+	open( INPUT, $InputFile ) or die "ERROR in $0:Input file $InputFile is not accessible.\n";
+	open(MAPPED, ">", ($InputFile . ".mapped")) or die ("Could not open outputfile " . ($InputFile . ".mapped") . "\n");
+	open(PERFECTMAPPED, ">", ($InputFile . ".perfect.mapped")) or die ("Could not open outputfile " . ($InputFile . ".perfect.mapped") . "\n");
 
-%Read in sequencing data and sort by library ID
-disp('Reading in sequencing data');
-fID=fopen(ReadCountFile);
-tmp=textscan(fID,'%s%s%f%f%f%f%f%f%f%f%f%f%f%f','HeaderLines',1,'Delimiter','\t');
-fclose(fID);
-LibraryIDs=tmp{1};
-Genes=tmp{2};
-ReadCounts=cell2mat(tmp(3:14));
-[tmp idx]=sort(LibraryIDs);
-LibraryIDs=LibraryIDs(idx);
-ReadCounts=ReadCounts(idx,:);
-Genes=Genes(idx);
+	while ( defined( my $line = <INPUT> ) ) {
+		my $BarcodeFound=0;
+		my $BarcodeFoundExact=0;
+		my $LeadingSequenceFound=0;
+		my $LeadingSequenceFoundExact=0;
+		my $TrailingSequenceFound=0;
+		my $TrailingSequenceFoundExact=0;
+		my $LeadingAndTrailingFound=0;
+		my $InsertCorrectLength=0;
+		my $InsertInLibrary=0;
+		my $InsertSequence;
+		$RecordsAnalyzed++;
+		if ( !( $RecordsAnalyzed % 100 ) ) {
+			print "Analyzing record $RecordsAnalyzed of inputfile $InputFile\n";
+		}
+		my $Sequence = <INPUT>;
+		my $line3 = <INPUT>;
+		my $Qualities = <INPUT>;
+		chomp($Sequence);
+		chomp($Qualities);
+		
+		#Get the barcode. See if it exists. If not, try to map it with maximally 1 nucleotide replacement and only 1 match existing.
+		my $Barcode = substr( $Sequence, $BarcodeOffset, $BarcodeLength );
+		if ( grep( /$Barcode/, @Barcodes ) ) {
+			$BarcodeFound=1;
+			$BarcodeFoundExact=1;
+		}	
+		else {
+			my $MatchedBarcode = MatchBarcode( $Barcode, @Barcodes );
+			if ($MatchedBarcode) {
+				$Barcode = $MatchedBarcode;
+				$BarcodeFound=1;
+			}
+		}
 
-%Select samples
-ReadCounts=ReadCounts(:,[ControlSamples TreatedSamples]);
-% SampleNames=SampleNames([ControlSamples TreatedSamples]);
+		#Only continue to analyze this read if a valid barcode has been found
+		if($BarcodeFound) {	
+			#Try to find the leading sequence and record any mistakes there. Determine an offset in case it is found		
+			my $LeadingOffset = 0;
+			my %DamerauResults;
+			my $NotConvergedOffset=1;
+			if ( substr( $Sequence, ($BarcodeLength+$BarcodeOffset), length($ExpectedLeadingSequence)) eq $ExpectedLeadingSequence ) {
+				$LeadingSequenceFound=1;
+				$LeadingSequenceFoundExact=1;
+			}
+			else {
+				$NotConvergedOffset=1;
+				while ($NotConvergedOffset) {
+					undef %DamerauResults;
+					DetermineDamerauLevenshteinDistance($ExpectedLeadingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset), (length($ExpectedLeadingSequence)+$LeadingOffset)),\%DamerauResults);
+					if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdLeading) {
+						$NotConvergedOffset=0;
+						#Test if there is an insertion or deletion at the end of the leader sequence, which would indicate we need to analyze again +1 or -1, respectively
+						foreach my $Change (keys $DamerauResults{'Changes'}) {
+							if($Change==length($ExpectedLeadingSequence)) {
+								if($DamerauResults{'Changes'}->{$Change} eq 'Insertion') {
+									$LeadingOffset--;
+									$NotConvergedOffset=1;
+								}
+								if($DamerauResults{'Changes'}->{$Change} eq 'Deletion') {
+									$LeadingOffset++;
+									$NotConvergedOffset=1;
+								}
+							}
+						}
+					}
+					else {
+						$NotConvergedOffset=0;		
+					}
+				}		
+			}
+			
+			if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdLeading) {
+				$LeadingSequenceFound=1;
+				#Store errors in leader sequence
+				foreach my $Change (keys $DamerauResults{'Changes'}) {
+					lock(%LeadingErrors);
+					$LeadingErrors{$Change}->{$DamerauResults{'Changes'}->{$Change}}++;
+				}
+			} 
+			
+			#Try to find the trailing sequence and record any mistakes there. Determine an offset in case it is found
+			my $InsertLength=$ExpectedInsertLength;
+			$NotConvergedOffset=1;
+			my $Trimming=0;
+			while ($NotConvergedOffset) {
+				undef %DamerauResults;
+				if ( substr( $Sequence, ($BarcodeLength+$BarcodeOffset+$LeadingOffset+$InsertLength+length($ExpectedLeadingSequence)), length($ExpectedTrailingSequence)) eq $ExpectedTrailingSequence ) {
+					$TrailingSequenceFound=1;
+					$TrailingSequenceFoundExact=1;
+					$NotConvergedOffset=0;	
+				}
+				else {
+					DetermineDamerauLevenshteinDistance($ExpectedTrailingSequence,substr( $Sequence, ($BarcodeLength+$BarcodeOffset+$LeadingOffset+$InsertLength+length($ExpectedLeadingSequence)), (length($ExpectedTrailingSequence)+$Trimming)),\%DamerauResults);
+					if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdTrailing) {
+						$NotConvergedOffset=0;
+						#Test if there is an insertion or deletion at the end of the leader sequence, which would indicate we need to analyze again +1 or -1, respectively
+						foreach my $Change (keys $DamerauResults{'Changes'}) {
+							if($Change==0 && $DamerauResults{'Changes'}->{$Change} eq 'Insertion') {
+								$InsertLength++;
+								$NotConvergedOffset=1;
+							}
+							if($Change==1 && $DamerauResults{'Changes'}->{$Change} eq 'Deletion') {
+								$InsertLength--;
+								$NotConvergedOffset=1;
+							}
+							if($Change==length($ExpectedTrailingSequence) && $DamerauResults{'Changes'}->{$Change} eq 'Insertion') {
+								$Trimming--;
+								$NotConvergedOffset=1;
+							}
+							if($Change==length($ExpectedTrailingSequence) && $DamerauResults{'Changes'}->{$Change} eq 'Deletion') {
+								$Trimming++;
+								$NotConvergedOffset=1;
+							}
+							#Break off searching for trailer if needing to search past the sequence length
+							if($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)+$InsertLength+$Trimming+length($ExpectedTrailingSequence)>150) {
+								$NotConvergedOffset=0;
+								$DamerauResults{'AccuratelyDetermined'}=0;
+							}
+						}
+					}
+					else {
+						$NotConvergedOffset=0;		
+					}
+				}		
+			}
+			
+			if($DamerauResults{'AccuratelyDetermined'} && $DamerauResults{'Distance'}<=$ErrorThresholdTrailing) {
+				$TrailingSequenceFound=1;
+				#Store errors in trailing sequence
+				foreach my $Change (keys $DamerauResults{'Changes'}) {
+					lock(%TrailingErrors);
+					$TrailingErrors{$Change}->{$DamerauResults{'Changes'}->{$Change}}++;
+				}
+			} 
+			$Results{$Barcode}->[0]++;
+			$Results{$Barcode}->[1]++ if ($BarcodeFoundExact);
+			
+			#Store the quality information of this read in a per barcode manner
+			my $CharNumber=0;
+			foreach my $Char (split //, $Qualities) {
+ 				$QualitiesByBarcode{$Barcode}->{$CharNumber} += ord($Char) unless ord($Char)==10;
+ 				$CharNumber++;
+ 			}
+ 			if ($LeadingSequenceFound) {
+ 				$Results{$Barcode}->[2]++;
+ 				$Results{$Barcode}->[3]++ if ($LeadingSequenceFoundExact);	
+ 			} 
+ 			if ($TrailingSequenceFound) {
+ 				$Results{$Barcode}->[4]++;
+ 				$Results{$Barcode}->[5]++ if ($TrailingSequenceFoundExact);
+ 			}
+ 			
+ 			if($LeadingSequenceFound && $TrailingSequenceFound) {
+				$InsertLengths{$InsertLength}++;
+				$Results{$Barcode}->[6]++;
+				$Results{$Barcode}->[9]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);
+				if($InsertLength==$ExpectedInsertLength) {
+					$Results{$Barcode}->[7]++;
+					$Results{$Barcode}->[10]++ if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact);			
+					$InsertSequence=substr($Sequence,($BarcodeLength+$BarcodeOffset+$LeadingOffset+length($ExpectedLeadingSequence)),$InsertLength);
+					if($$Library{$InsertSequence}) {
+						$Results{$Barcode}->[8]++;
+						$InsertCounts{$InsertSequence}->{$Barcode}++;
+						print MAPPED $$Library{$InsertSequence} . "\t" . $Barcode . "\n";
+						if ($LeadingSequenceFoundExact && $TrailingSequenceFoundExact) {
+							$Results{$Barcode}->[11]++;
+							$PerfectInsertCounts{$InsertSequence}->{$Barcode}++;
+							print PERFECTMAPPED $$Library{$InsertSequence} . "\t" . $Barcode ."\n"; 
+						} else {
+							print PERFECTMAPPED "ERROR:Leading and/or trailing sequence not perfect\n";
+						}
+					}
+					else {
+						print MAPPED "ERROR:Insert not mapped to library\n";
+						print PERFECTMAPPED "ERROR:Insert not mapped to library\n";
+					}
+				}
+				else {
+					print MAPPED "ERROR:Insert length incorrect\n";
+					print PERFECTMAPPED "ERROR:Insert length incorrect\n";
+				}
+			}
+			else {
+				$NotAnalyzed=$NotAnalyzed . "$Sequence\n";
+				print MAPPED "ERROR:No leading or trailing sequence found\n";
+				print PERFECTMAPPED "ERROR:No leading or trailing sequence found\n";
+			}
+		}
+		else {
+			print MAPPED "ERROR:No barcode found\n";
+			print PERFECTMAPPED "ERROR:No barcode found\n";
+		}			
+	}
+	close(INPUT)  or die "Could not close input file $InputFile.\n";
+	
+	#Write tmp output to output file
+	open(OUTPUT, ">", ($InputFile . ".tmp")) or die ("Could not open outputfile " . ($InputFile . ".tmp") . "\n");
+	#Write Results
+	print OUTPUT "***RESULTS***\n";
+	foreach my $Barcode (keys %Results) {
+		foreach my $Entry (keys $Results{$Barcode}) {
+			print OUTPUT "$Barcode\t$Entry\t" . $Results{$Barcode}->[$Entry]  . "\n";
+		}
+	}
+	
+	print OUTPUT "***LEADING ERRORS***\n"; 
+	foreach my $Position (keys %LeadingErrors) {
+		foreach my $Change (keys $LeadingErrors{$Position}) {
+			print OUTPUT "$Position\t$Change\t" . $LeadingErrors{$Position}->{$Change} . "\n";
+		}
+	}
+	
+	print OUTPUT "***TRAILING ERRORS***\n"; 
+	foreach my $Position (keys %TrailingErrors) {
+		foreach my $Change (keys $TrailingErrors{$Position}) {
+			print OUTPUT "$Position\t$Change\t" . $TrailingErrors{$Position}->{$Change} . "\n";
+		}
+	}
+	
+	print OUTPUT "***INSERT LENGTHS***\n";
+	foreach my $Length(keys %InsertLengths) {
+		print OUTPUT "$Length\t" . $InsertLengths{$Length} . "\n";
+	}
+	
+	print OUTPUT "***INSERT COUNTS***\n";
+	foreach my $Sequence (keys %InsertCounts) {
+		foreach my $Barcode (keys $InsertCounts{$Sequence}) {
+			print OUTPUT "$Sequence\t$Barcode\t" . $InsertCounts{$Sequence}->{$Barcode} . "\n";
+		}
+	}
+	
+	print OUTPUT "***PERFECT INSERT COUNTS***\n";
+	foreach my $Sequence (keys %PerfectInsertCounts) {
+		foreach my $Barcode (keys $PerfectInsertCounts{$Sequence}) {
+			print OUTPUT "$Sequence\t$Barcode\t" . $PerfectInsertCounts{$Sequence}->{$Barcode} . "\n";
+		}
+	}
+	
+	print OUTPUT "***QUALITIES BY BARCODE***\n";
+	foreach my $Barcode (keys %QualitiesByBarcode) {
+		foreach my $CharNum (keys $QualitiesByBarcode{$Barcode}) {
+			print OUTPUT "$Barcode\t$CharNum\t" . $QualitiesByBarcode{$Barcode}->{$CharNum} . "\n";
+		}
+	}
+	
+	print OUTPUT "***RECORDS ANALYZED***\n";
+	print OUTPUT $RecordsAnalyzed . "\n";
+	print OUTPUT "***NOT ANALYZED***\n";
+	print OUTPUT $NotAnalyzed;
+	close(OUTPUT) or die "Could not close outputfile " . ($InputFile . ".tmp") . "\n";
+	close(MAPPED) or die "Could not close outputfile " . ($InputFile . ".mapped") . "\n";
+	close(PERFECTMAPPED) or die "Could not close outputfile " . ($InputFile . ".perfect.mapped") . "\n";
+	return();
+}
 
-%Read in Construct statistics data and sort by library ID
-fID=fopen(ConstructStatisticsFile);
-tmp=textscan(fID,'%s%s%s%s%f%f%f%f%f%f%f%f%f%s','HeaderLines',1);
-LibraryIDsConstructStatistics=tmp{1};
-PValuesConstructStatistics=tmp{10};
-[tmp idx]=sort(LibraryIDsConstructStatistics);
-LibraryIDsConstructStatistics=LibraryIDsConstructStatistics(idx);
-PValuesConstructStatistics=PValuesConstructStatistics(idx);
-fclose(fID);
+sub MatchBarcode($@) {
+	my ( $Barcode, @BarcodeList ) = @_;
+	my $MatchesFound = 0;
+	my $MatchedBarcode;
+	foreach my $BarcodeFromList (@BarcodeList) {
+		if ( ScoreTwoStrings( $Barcode, $BarcodeFromList ) <= 1 ) {
+			$MatchedBarcode = $BarcodeFromList;
+			$MatchesFound++;
+		}
+	}
+	if ( $MatchesFound == 1 ) {
+		return $MatchedBarcode;
+	}
+	else {
+		return 0;
+	}
+}
 
-%Read in gene statistics data
-fID=fopen(AggregateStatisticsFile);
-tmp=textscan(fID,'%s%f%f%f%f%f%f%f%f%f%f%f','HeaderLines',1);
-NameGeneStatistics=tmp{1};
-PValuesGeneStatistics=tmp{4};
-fclose(fID);
+sub ScoreTwoStrings($$) {
+	my ( $Barcode, $BarcodeFromList ) = @_;
+	my $Deviations = 0;
+	for ( my $i = 0 ; $i < ( length $Barcode ) ; $i++ ) {
+		if ( ( substr $Barcode, $i, 1 ) ne ( substr $BarcodeFromList, $i, 1 ) ) {
+			$Deviations++;
+		}
+	}
+	return $Deviations;
+}
 
-%Assert that LibraryIDs and LibraryIDsStatistics are identical
-disp('Asserting library equality');
-for i=1:size(LibraryIDs,1)
-    if(~strcmp(LibraryIDs{i},LibraryIDsConstructStatistics{i}) || (size(LibraryIDs,1) ~= size(LibraryIDsConstructStatistics,1)))
-        disp('Equal library assertion failed');
-        return;
-    end
-end
-
-%Sort all data according to Construct P value
-[tmp, idx]=sort(PValuesConstructStatistics);
-LibraryIDs=LibraryIDs(idx);
-ReadCounts=ReadCounts(idx,:);
-Genes=Genes(idx,:);
-PValuesConstructStatistics=PValuesConstructStatistics(idx,:);
-
-%Perform Benjamini Hochberg correction for construct P-values
-PValuesConstructStatistics=mafdr(PValuesConstructStatistics,'BHFDR',true);
-
-%Map essentialities
-disp('Mapping essentialities');
-for i=1:size(LibraryIDs,1)
-    if (find(strcmp(Genes{i},EssentialGenes)))
-        Essentialities(i)=1;
-    else
-        if (strfind(LibraryIDs{i},'NonTargetingControl'))
-            Essentialities(i)=2;
-        else
-            Essentialities(i)=0;
-        end
-    end
-end
-
-%Plot correlation graphs
-disp('Plotting correlation graphs');
-figure('Position',get(0,'ScreenSize'));
-for row=1:NumberOfSamples
-    for column=1:NumberOfSamples
-        subaxis(NumberOfSamples,NumberOfSamples,column+(row-1)*NumberOfSamples,'Spacing',0.025,'Padding',0,'Margin',0.06);
-        scatter(log2(ReadCounts(:,row)),log2(ReadCounts(:,column)),9,'.');
-        set(gca,'FontSize',6);
-        xlabel(['^2Log read counts ' SampleNames{row}]);
-        ylabel(['^2Log read counts ' SampleNames{column}]);
-        clear CorrData;
-        CorrData(:,1)=(ReadCounts(:,row));
-        CorrData(:,2)=(ReadCounts(:,column));
-        CorrData=CorrData(find(CorrData(:,1)>1),:);
-        CorrData=CorrData(find(CorrData(:,2)>1),:);
-        CorrelationCoefficient=corrcoef(log2(CorrData(:,1)),log2(CorrData(:,2)));
-        text(0.1*log2(max(ReadCounts(:))),0.9*log2(max(ReadCounts(:))),['\rho=' num2str(CorrelationCoefficient(1,2))]);
-        set(gca,'XLim',[0 log2(max(ReadCounts(:)))]);
-        set(gca,'YLim',[0 log2(max(ReadCounts(:)))]);
-    end
-end
-% close;
-
-%Normalize reads
-disp('Normalizing read counts');
-NormalizedReads=NormalizeReads(ReadCounts);
-
-%Average replicates
-disp('Averaging replicates');
-AveragedData(:,1)=geomean(NormalizedReads(:,1:size(ControlSamples,2))')';
-AveragedData(:,2)=geomean(NormalizedReads(:,size(ControlSamples,2)+1:size(ControlSamples,2)+size(TreatedSamples,2))')';
-
-%Produce MC plots mapped for essentiality or P value order
-disp('Producing MC Plot');
-MCPlotSVG(AveragedData(:,2),AveragedData(:,1),LibraryIDs,Genes,Essentialities,[MCPlotName '.svg']);
-
-%Sort Construct data based on Construct P Values
-disp('Plotting Construct waterfall');
-[tmp, idx]=sort(PValuesConstructStatistics);
-LibraryIDs=LibraryIDs(idx);
-Genes=Genes(idx,:);
-Essentialities=Essentialities(idx);
-PValuesConstructStatistics=PValuesConstructStatistics(idx);
-AveragedData=AveragedData(idx,:);
-NormalizedReads=NormalizedReads(idx,:);
-
-%Plot Construct P-Value beeswarm plot
-figure;
-[GroupIDs GroupNames]=grp2idx(Genes);
-for i=1:size(GroupIDs,1)
-    GroupIDs(i)=find(strcmp(GroupNames(GroupIDs(i)),NameGeneStatistics));
-end
-plotSpread(log10(PValuesConstructStatistics),'distributionIdx',GroupIDs,'categoryIdx',Essentialities','categoryColors',[[0 0.6 0.5];[0.9 0.6 0];[0.35 0.7 0.9]]);
-XTickLabels={};
-for i=50:50:size(PValuesConstructStatistics,1)
-    XTickLabels=[XTickLabels;num2str(i)];
-end
-set(gca,'XTick',50:50:size(PValuesConstructStatistics,1),'XTickLabel',XTickLabels,'FontName','Arial');
-xlabel('Gene ID','FontName','Arial');
-ylabel('^1^0Log Construct FDR','FontName','Arial');
-% Children=get(gca,'Children');
-% for i=1:size(Children,1)
-%     set(Children(i),'MarkerSize',20)
-% end
-
-
-%Gather ROC info for Constructs
-PositivesFound=0;
-NegativesFound=0;
-ConstructTPR(size(Essentialities,2))=0;
-ConstructFPR(size(Essentialities,2))=0;
-TotalPositives=sum(Essentialities==1);
-TotalNegatives=sum(Essentialities==2);
-for i=1:size(Essentialities,2)
-    if(Essentialities(i)==1)
-        PositivesFound=PositivesFound+1;
-    end
-    if(Essentialities(i)==2)
-        NegativesFound=NegativesFound+1;
-    end
-    ConstructTPR(i)=PositivesFound/TotalPositives;
-    ConstructFPR(i)=NegativesFound/TotalNegatives;
-end
-
-%Add 0,0 as a datapoint
-ConstructTPR=[0 ConstructTPR];
-ConstructFPR=[0 ConstructFPR];
-figure;
-plot(ConstructFPR,ConstructTPR,'Color',[0.9 0.6 0],'LineWidth',2.9);
-xlabel('Construct based FPR');
-ylabel('Construct based TPR');
-title('Construct based ROC curve');
-
-%Plot gene waterfall plot colored by essentiality
-disp('Plotting gene waterfall');
-for i=1:size(NameGeneStatistics,1)
-    if(find(strcmp(NameGeneStatistics{i},EssentialGenes)))
-        GeneEssentialityStatistics(i)=1;
-    else
-        if(find(strcmp(NameGeneStatistics{i},NonEssentialGenes)))
-            GeneEssentialityStatistics(i)=2;
-        else
-            if(strcmp(NameGeneStatistics{i},'NonTargetingControl'))
-                GeneEssentialityStatistics(i)=2;
-            else
-                GeneEssentialityStatistics(i)=0;
-            end
-        end
-    end
-end
-
-figure;
-%Perform Benjamini Hochberg correction for gene P-values
-PValuesGeneStatistics=mafdr(PValuesGeneStatistics,'BHFDR',true);
-EssentialAggregates=log10(PValuesGeneStatistics);
-NonEssentialAggregates=log10(PValuesGeneStatistics);
-OtherAggregates=log10(PValuesGeneStatistics);
-for i=1:size(PValuesGeneStatistics,1)
-    if(GeneEssentialityStatistics(i)==1)
-        NonEssentialAggregates(i)=0;
-        OtherAggregates(i)=0;
-    else
-        if(GeneEssentialityStatistics(i)==2)
-            EssentialAggregates(i)=0;
-            OtherAggregates(i)=0;
-        else
-            EssentialAggregates(i)=0;
-            NonEssentialAggregates(i)=0;
-        end
-    end
-end
-h=bar(EssentialAggregates);
-set(h,'FaceColor',[0.9 0.6 0]);
-set(h,'LineStyle','none');
-set(h,'BarWidth',1);
-hold on;
-h=bar(NonEssentialAggregates);
-set(h,'FaceColor',[0.35 0.7 0.9]);
-set(h,'LineStyle','none');
-set(h,'BarWidth',1);
-h=bar(OtherAggregates);
-set(h,'FaceColor',[0 0.6 0.5]);
-set(h,'LineStyle','none');
-set(h,'BarWidth',1);
-ylabel('^1^0Log Gene FDR','FontName','Arial');
-xlabel('Gene ID','FontName','Arial');
-set(gca,'YLim',[-5 0]);
-hold on;
-scatter(1:size(GeneEssentialityStatistics,2),zeros(size(GeneEssentialityStatistics,2),1),50,GeneEssentialityStatistics,'.')
-colormap([[0 0.6 0.5];[0.9 0.6 0];[0.35 0.7 0.9]]);
-set(gca,'FontName','Arial');
-
-%Plot beeswarm plots of fold change distributions 
-for i=1:size(NameGeneStatistics,1)
-    BeeswarmData{:,i}=log2(AveragedData(find(strcmp(NameGeneStatistics{i},Genes)),2)./AveragedData(find(strcmp(NameGeneStatistics{i},Genes)),1));
-end
-figure;
-plotSpread(BeeswarmData,'distributionIdx',GroupIDs,'categoryIdx',Essentialities','categoryColors',[[0 0.6 0.5];[0.9 0.6 0];[0.35 0.7 0.9]]);
-set(gca,'XTick',50:50:size(NameGeneStatistics,1));
-set(gca,'YLim',[-12 4]);
-line([0 size(NameGeneStatistics,1)],[0 0],'Color',[0 0 0]);
-ylabel('^2Log fold change');
-xlabel('Gene ID');
-
+1;
