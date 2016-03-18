@@ -1,56 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" onload="init(evt)" width="100%" height="100%" viewBox="-10 -10 1040 520">
+<script src="jscolor.js"></script>
 <script type="text/ecmascript">
-	<![CDATA[
 	function init(evt) {
 		if ( window.svgDocument == null ) {
-			svgDocument = evt.target.ownerDocument;
+			svgDocument = document.getElementById('svgdocument');
+
 		}
 		tooltip = svgDocument.getElementById("tooltip");
 		tooltip_bg = svgDocument.getElementById("tooltip_bg");
 	}
-	
 	function ClickDetected(evt) {
 		var QueryGene=evt.target.className.baseVal;
 		SwapGeneSelection(evt, QueryGene);
 	}
 	
-	function SwapGeneSelection(evt, QueryGene) {
-		svgDoc = evt.target.ownerDocument;
-		var CurrentGenes=document.getElementsByClassName(QueryGene);
-		var CurrentGeneStatus="no";
-		for (var i = 0; i < CurrentGenes.length; i++) { 
-			if(CurrentGenes[i].getAttribute("selected")=="yes") {
-				CurrentGeneStatus="yes";
-			} 
-		}
-		
-		for (var i = 0; i < CurrentGenes.length; i++) { 
-    		if ( CurrentGeneStatus == "no" ) { 
-				var CurrentSize=CurrentGenes[i].getAttribute("pixelsize");
-        		CurrentGenes[i].setAttribute("r",CurrentSize*2);
-				CurrentGenes[i].setAttribute("stroke-width",2);
-				CurrentGenes[i].setAttribute("selected","yes");
-    		}
-			else {
-				var CurrentSize=CurrentGenes[i].getAttribute("pixelsize");
-				CurrentGenes[i].setAttribute("r",CurrentSize);
-				CurrentGenes[i].setAttribute("stroke-width",0.2);
-				CurrentGenes[i].setAttribute("selected","no");
-			}
-		}		
-		
-		for (var i = CurrentGenes.length-1; i >= 0; i--) { 
-			svgDoc.documentElement.appendChild(CurrentGenes[i]);
-    	}
-	}
-	
 	function ShowTooltip(evt, mouseovertext) {
-		var svg = document.querySelector('svg');
-		svgDoc = evt.target.ownerDocument;
-		var pt=svg.createSVGPoint();
+		var pt=svgDocument.createSVGPoint();
 		pt.x = evt.clientX+25; pt.y = evt.clientY+15;
-        pt=pt.matrixTransform(svg.getScreenCTM().inverse());
-		
+        pt=pt.matrixTransform(svgDocument.getScreenCTM().inverse());
 		tooltip.firstChild.data = mouseovertext;
 		length = tooltip.getComputedTextLength()+5;
 		tooltip.setAttributeNS(null,"x",(pt.x));
@@ -60,38 +26,32 @@
 		tooltip_bg.setAttributeNS(null,"x",(pt.x-2));
 		tooltip_bg.setAttributeNS(null,"y",(pt.y-9));
 		tooltip_bg.setAttributeNS(null,"visibility","visible");
-		svgDoc.documentElement.appendChild(tooltip_bg);
-		svgDoc.documentElement.appendChild(tooltip);
+		svgDocument.appendChild(tooltip_bg);
+		svgDocument.appendChild(tooltip);
 	}
-
 	function HideTooltip(evt) {
 		tooltip.setAttributeNS(null,"visibility","hidden");
 		tooltip_bg.setAttributeNS(null,"visibility","hidden");
 	}
-	
-
 	function MouseOverDetected(evt) {
 		var CurrentSize=evt.target.getAttribute("pixelsize");
 		evt.target.setAttribute("r",CurrentSize*2);
 		var CurrentGene=evt.target.getAttribute("class");
 		ShowTooltip(evt,evt.target.className.baseVal+"-"+evt.target.getAttribute("libraryid"));
-		
-	}
 
+	}
 	function MouseOutDetected(evt) {
 		if(evt.target.getAttribute("selected") == "no") {
 			var CurrentSize=evt.target.getAttribute("pixelsize");
 			evt.target.setAttribute("r",CurrentSize);
-		} 
+		}
 		HideTooltip(evt);
 	}
-	
 	function SearchForGene(evt) {
 		var QueryGene = prompt("Please enter the gene you're looking for");
 		SwapGeneSelection(evt, QueryGene.toUpperCase());
 	}
-
-	function ToggleControls(evt) {
+	function ToggleControls(evt) {		
 		SwapGeneSelection(evt,"NonTargetingControl");
 		SwapGeneSelection(evt,"NUP98");
 		SwapGeneSelection(evt,"RPS13");
@@ -104,13 +64,101 @@
 		SwapGeneSelection(evt,"PSMD11");
 		SwapGeneSelection(evt,"PSMC4");
 	}
-	]]>
+	
+	function ChangeGeneColor(QueryGene, Color) {
+		console.log(Color);
+		console.log(document.getElementById(QueryGene+'_rondje'));
+		document.getElementById(QueryGene+'_rondje').setAttribute('fill','#'+Color);
+		var CurrentGenes=svgDocument.getElementsByClassName(QueryGene);
+		for (var i=0; i< CurrentGenes.length; i++) {
+			CurrentGenes[i].setAttribute('fill','#'+Color);
+		}
+	}
+	
+	function SwapGeneSelection(evt, QueryGene) {
+		var CurrentGenes=svgDocument.getElementsByClassName(QueryGene);
+		var CurrentGeneStatus="no";
+		for (var i = 0; i < CurrentGenes.length; i++) {
+			if(CurrentGenes[i].getAttribute("selected")=="yes") {
+				CurrentGeneStatus="yes";
+			}
+		}
+
+		for (var i = 0; i < CurrentGenes.length; i++) {
+    		if ( CurrentGeneStatus == "no" ) {
+				var CurrentSize=CurrentGenes[i].getAttribute("pixelsize");
+				var CurrentColor=CurrentGenes[i].getAttribute("fill");
+        		CurrentGenes[i].setAttribute("r",CurrentSize*2);
+				CurrentGenes[i].setAttribute("stroke-width",2);
+				CurrentGenes[i].setAttribute("selected","yes");
+    		}
+			else {
+				var CurrentSize=CurrentGenes[i].getAttribute("pixelsize");
+				CurrentGenes[i].setAttribute("r",CurrentSize);
+				CurrentGenes[i].setAttribute("stroke-width",0.2);
+				CurrentGenes[i].setAttribute("selected","no");
+			}
+		}
+		
+		if (CurrentGeneStatus == "no") {
+			var ul=document.getElementById("SelectedGenes");
+			var li=document.createElement("li");
+			var svg=document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			svg.setAttribute('width','12');
+			svg.setAttribute('height','12');
+			svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+			var rondje = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+			// Set any attributes as desired
+			rondje.setAttribute("id",QueryGene+"_rondje");
+			rondje.setAttribute("cx", 6);
+			rondje.setAttribute("cy", 6);
+			rondje.setAttribute("r",  5);
+			rondje.setAttribute("fill", CurrentColor);
+			rondje.setAttribute("stroke", "black");
+			rondje.setAttribute("stroke-width", "1");
+			rondje.setAttribute("onclick","document.getElementById('"+QueryGene+"_Input_Field').jscolor.show()");
+			svg.appendChild(rondje);
+			li.appendChild(svg);
+			var InputField=document.createElement('INPUT');
+			InputField.setAttribute("id",QueryGene+"_Input_Field");
+			InputField.setAttribute("class","jscolor");
+			InputField.setAttribute("style","visibility:hidden;width:1px;");
+			
+			li.appendChild(InputField);
+			li.appendChild(document.createTextNode(QueryGene));
+			li.setAttribute("id",QueryGene);
+			ul.appendChild(li);
+			picker=new jscolor(InputField,{});
+			picker.fromString(CurrentColor);
+			document.getElementById(QueryGene+"_Input_Field").jscolor=picker;
+			InputField.setAttribute("onchange","ChangeGeneColor('"+QueryGene+"',this.value)");
+		}
+		else {
+			var ul=document.getElementById("SelectedGenes");
+			var li=document.getElementById(QueryGene);
+			ul.removeChild(li);
+		}
+
+		for (var i = CurrentGenes.length-1; i >= 0; i--) {
+			svgDocument.appendChild(CurrentGenes[i]);
+    	}
+	}
+	
+	
 </script>
-
-
-<rect x="900" y="0" width="70" height="15" style="fill: #ffffff; stroke:#000000; stroke-width: 0.2;" onclick="SearchForGene(evt)"/>
-<rect x="900" y="20" width="70" height="15" style="fill: #ffffff; stroke:#000000; stroke-width: 0.2;" onclick="ToggleControls(evt)"/>
-<text font-family="Arial" font-size="8" x="905" y="9" onclick="SearchForGene(evt)">Search gene...</text>
-<text font-family="Arial" font-size="8" x="905" y="29" onclick="ToggleControls(evt)">Toggle controls</text>
+<html>
+<body>
+<div id="header" style="text-align:center;font-family:Arial">
+	<h1>t1 vs. t0 w.t.</h1>
+</div>
+<div id="controls" style="width:20%;float:right;font-family:Arial">
+	<button type="button" onclick="SearchForGene(event)" style="width:100px">Search...</button><br><br>
+	<button type="button" onclick="ToggleControls(event)"  style="width:100px">Toggle controls</button><br><br>
+	Selected Genes:
+	<ul id="SelectedGenes" style="list-style-type: none;padding-left:0pt;">
+	</ul>
+</div>
+<div id="plotarea" style="width:80%;height:90%;float:left;">
+<svg id="svgdocument" xmlns="http://www.w3.org/2000/svg" version="1.1" onload="init(evt)" width="100%" height="100%" viewBox="-10 -10 750 520"">
 <rect class="tooltip_bg" id="tooltip_bg" x="0" y="0" width="85" height="12" visibility="hidden" style="fill: #ffffcc; stroke: #000000; stroke-width: 0.2;"/>
 <text class="tooltip" id="tooltip" font-family="Arial" font-size="8" x="0" y="0" visibility="hidden">Tooltip</text>
