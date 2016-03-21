@@ -104,7 +104,7 @@ AveragedData(:,2)=geomean(NormalizedReads(:,size(ControlSamples,2)+1:size(Contro
 
 %Produce MC plots mapped for essentiality or P value order
 disp('Producing MC Plot');
-MCPlotSVG(AveragedData(:,2),AveragedData(:,1),LibraryIDs,Genes,Essentialities,[MCPlotName '.svg']);
+MCPlotSVG(AveragedData(:,2),AveragedData(:,1),LibraryIDs,Genes,Essentialities,[MCPlotName '.html']);
 
 %Sort Construct data based on Construct P Values
 disp('Plotting Construct waterfall');
