@@ -168,6 +168,8 @@ for i=1:size(OutputText,1)
     fwrite(fID,OutputText{i});
 end
 fwrite(fID,['</svg>' LineFeed]);
+fwrite(fID,['</body>' LineFeed]);
+fwrite(fID,['</html>' LineFeed]);
 fclose(fID);
 
 end
