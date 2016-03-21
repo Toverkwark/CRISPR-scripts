@@ -89,7 +89,7 @@
 				var CurrentSize=CurrentGenes[i].getAttribute("pixelsize");
 				var CurrentColor=CurrentGenes[i].getAttribute("fill");
         		CurrentGenes[i].setAttribute("r",CurrentSize*2);
-				CurrentGenes[i].setAttribute("stroke-width",2);
+				CurrentGenes[i].setAttribute("stroke-width",1);
 				CurrentGenes[i].setAttribute("selected","yes");
     		}
 			else {
