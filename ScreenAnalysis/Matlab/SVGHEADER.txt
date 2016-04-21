@@ -148,9 +148,7 @@
 </script>
 <html>
 <body>
-<div id="header" style="text-align:center;font-family:Arial">
-	<h1>t1 vs. t0 w.t.</h1>
-</div>
+
 <div id="controls" style="width:20%;float:right;font-family:Arial">
 	<button type="button" onclick="SearchForGene(event)" style="width:100px">Search...</button><br><br>
 	<button type="button" onclick="ToggleControls(event)"  style="width:100px">Toggle controls</button><br><br>
