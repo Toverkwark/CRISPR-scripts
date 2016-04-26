@@ -81,10 +81,8 @@ for row=1:NumberOfSamples
         xlabel(['^2Log read counts ' SampleNames{row}]);
         ylabel(['^2Log read counts ' SampleNames{column}]);
         clear CorrData;
-        CorrData(:,1)=(ReadCounts(:,row));
-        CorrData(:,2)=(ReadCounts(:,column));
-        CorrData=CorrData(find(CorrData(:,1)>1),:);
-        CorrData=CorrData(find(CorrData(:,2)>1),:);
+        CorrData(:,1)=(ReadCounts(:,row))+1;
+        CorrData(:,2)=(ReadCounts(:,column))+1;
         CorrelationCoefficient=corrcoef(log2(CorrData(:,1)),log2(CorrData(:,2)));
         text(0.1*log2(max(ReadCounts(:))),0.9*log2(max(ReadCounts(:))),['\rho=' num2str(CorrelationCoefficient(1,2))]);
         set(gca,'XLim',[0 log2(max(ReadCounts(:)))]);
