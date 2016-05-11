@@ -3,9 +3,6 @@ HorizontalPixels=666;
 VerticalPixels=500;
 MinimalX=4;
 MaximalX=12;
-if(findstr('UMUC',FileName))
-    MaximalX=16;
-end
 MinimalY=-3;
 MaximalY=3;
 PixelSize=2;
