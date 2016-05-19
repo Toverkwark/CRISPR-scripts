@@ -148,15 +148,3 @@
 </script>
 <html>
 <body>
-
-<div id="controls" style="width:20%;float:right;font-family:Arial">
-	<button type="button" onclick="SearchForGene(event)" style="width:100px">Search...</button><br><br>
-	<button type="button" onclick="ToggleControls(event)"  style="width:100px">Toggle controls</button><br><br>
-	Selected Genes:
-	<ul id="SelectedGenes" style="list-style-type: none;padding-left:0pt;">
-	</ul>
-</div>
-<div id="plotarea" style="width:80%;height:90%;float:left;">
-<svg id="svgdocument" xmlns="http://www.w3.org/2000/svg" version="1.1" onload="init(evt)" width="100%" height="100%" viewBox="-10 -10 750 520"">
-<rect class="tooltip_bg" id="tooltip_bg" x="0" y="0" width="85" height="12" visibility="hidden" style="fill: #ffffcc; stroke: #000000; stroke-width: 0.2;"/>
-<text class="tooltip" id="tooltip" font-family="Arial" font-size="8" x="0" y="0" visibility="hidden">Tooltip</text>
