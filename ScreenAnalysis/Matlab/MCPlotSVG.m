@@ -30,6 +30,21 @@ while ischar(Line)
 end
 fclose(fID);
 Header=Header';
+Header=[Header;'<div id="header" style="text-align:center;font-family:Arial">'];
+Header=[Header;'	<h1>' FileName '</h1>'];
+Header=[Header;'</div>'];
+Header=[Header;'<div id="controls" style="width:20%;float:right;font-family:Arial">'];
+Header=[Header;'	<button type="button" onclick="SearchForGene(event)" style="width:100px">Search...</button><br><br>'];
+Header=[Header;'	<button type="button" onclick="ToggleControls(event)"  style="width:100px">Toggle controls</button><br><br>'];
+Header=[Header;'	Selected Genes:'];
+Header=[Header;'	<ul id="SelectedGenes" style="list-style-type: none;padding-left:0pt;">'];
+Header=[Header;'	</ul>'];
+Header=[Header;'</div>'];
+Header=[Header;'<div id="plotarea" style="width:80%;height:90%;float:left;">'];
+Header=[Header;'<svg id="svgdocument" xmlns="http://www.w3.org/2000/svg" version="1.1" onload="init(evt)" width="100%" height="100%" viewBox="-10 -10 750 520"">'];
+Header=[Header;'<rect class="tooltip_bg" id="tooltip_bg" x="0" y="0" width="85" height="12" visibility="hidden" style="fill: #ffffcc; stroke: #000000; stroke-width: 0.2;"/>'];
+Header=[Header;'<text class="tooltip" id="tooltip" font-family="Arial" font-size="8" x="0" y="0" visibility="hidden">Tooltip</text>'];
+
 %Create axes
 Header=[Header;'<line x1="' num2str(XOffset) '" y1="0" x2="' num2str(HorizontalPixels+XOffset)  '" y2="0" stroke-width="0.5" stroke="black" />' LineFeed];
 Header=[Header;'<line x1="' num2str(XOffset) '" y1="0" x2="' num2str(XOffset) '" y2="' num2str(VerticalPixels) '" stroke-width="0.5" stroke="black" />' LineFeed];
