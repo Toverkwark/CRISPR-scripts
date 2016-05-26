@@ -1,0 +1,3 @@
+For pGIN screens, first set LocalSettings to performing a pGIN_A screen. Run AnalyzeScreen with keepmapfiles=Y.
+Then set LocalSettings to performing a RV screen and run AnalyzeScreen with keepmapfiles=Y and RunRC=Y
+Then run CombineMappings on left and right mapped files and their respective libraries

@@ -1,5 +1,5 @@
 sub ProcessReads($$$$$$$$$) {
-	my ($InputFile,$BarcodeLength,$BarcodeOffset,$ExpectedInsertLength,$ExpectedLeadingSequence,$ExpectedTrailingSequence,$ErrorThresholdLeading,$ErrorThresholdTrailing,$Library,@Barcodes) = @_;
+	my ($InputFile,$BarcodeLength,$BarcodeOffset,$ExpectedInsertLength,$ExpectedLeadingSequence,$ExpectedTrailingSequence,$ErrorThresholdLeading,$ErrorThresholdTrailing,$RunRC,$Library,@Barcodes) = @_;
 	my %LeadingErrors;
 	my %TrailingErrors;
 	my %InsertLengths;
@@ -37,6 +37,11 @@ sub ProcessReads($$$$$$$$$) {
 		
 		#Get the barcode. See if it exists. If not, try to map it with maximally 1 nucleotide replacement and only 1 match existing.
 		my $Barcode = substr( $Sequence, $BarcodeOffset, $BarcodeLength );
+		if($RunRC eq 'Y') {
+			$Barcode = 'CGTGAT';
+			$BarcodeFound=1;
+			$BarcodeExact=1;
+		}
 		if ( grep( /$Barcode/, @Barcodes ) ) {
 			$BarcodeFound=1;
 			$BarcodeFoundExact=1;

@@ -28,8 +28,13 @@ my $ErrorThresholdTrailing = 10; #This number of mutations or indels can be pres
 #Set relevant expected sequences
 if($ScreenType eq 'GIN_A') {
         #For CRISPRi Libraries clone into pGIN_A:
-        $ExpectedLeadingSequence = "CCCTTGGAGAAAAGCCTTGTTTG"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+        $ExpectedLeadingSequence = "CCCTTGGAGAAAAGCCTTGTTT"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
         $ExpectedTrailingSequence = "GTTTAAGAGCTAGAAA"; #Sequence that is expected to come after the gRNA/shRNA sequence
+}
+if($ScreenType eq 'GIN_RV') {
+        #For CRISPRi Libraries clone into pGIN_B and read using illuseq RV primer:
+        $ExpectedLeadingSequence = "TATGCTGTTTCCAGCATAGCTCTTAAAC"; #Sequence that is expected to come between the barcode and the start of the gRNA/shRNA sequence
+        $ExpectedTrailingSequence = "GGTGTTTCGTCCTTTCCACAA"; #Sequence that is expected to come after the gRNA/shRNA sequence
 }
 if($ScreenType eq 'GIN_B') {
         #For Libraries cloned into pGIN_B:

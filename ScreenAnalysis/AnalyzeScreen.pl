@@ -11,7 +11,7 @@ require "ProcessReads.pl";
 sub MatchBarcode($@);
 sub ScoreTwoStrings($$);
 
-print "Usage:perl $0 -input -output -report -library -keepmapfiles\n-input\tName of input file\n-output\tName of output file. Default is inputfile.stripped\n-report\tName of report file. Default is inputfile.report\n-library\tName of library file to which inserts are mapped\n-keepmapfiles\tGive Y as argument to make sure map files are kept for paired end matching\n";
+print "Usage:perl $0 -input -output -report -library -keepmapfiles -RunRC\n-input\tName of input file\n-output\tName of output file. Default is inputfile.stripped\n-report\tName of report file. Default is inputfile.report\n-library\tName of library file to which inserts are mapped\n-keepmapfiles\tGive Y as argument to make sure map files are kept for paired end matching\n-RunRC\tGive Y as argument to run data from an Illuseq 2 read\n";
 
 my $StartTime=time;
 
@@ -40,6 +40,7 @@ my $OutputFile;
 my $ReportFile;
 my $LibraryFile;
 my $KeepMapFiles;
+my $RunRC;
 my $RecordsAnalyzed=0;
 my $NotAnalyzed="";
 
@@ -48,7 +49,8 @@ GetOptions(
 	"output=s" => \$OutputFile,
 	"report=s" => \$ReportFile,
 	"library=s" => \$LibraryFile,
-	"keepmapfiles=s" => \$KeepMapFiles
+	"keepmapfiles=s" => \$KeepMapFiles,
+	"RunRC=s" => \$RunRC
 );
 
 if ( !$OutputFile ) {
@@ -77,8 +79,11 @@ while ( defined( my $Line = <LIBRARY> ) ) {
 	my @values = split( /\,/, $Line );
 
 	#Include this line because excel generated csv files have CRLF line endings
-	$values[2]=substr($values[2],0,length($values[2])-1);
-	
+	#$values[2]=substr($values[2],0,length($values[2])-1);
+	if($RunRC eq 'Y') {
+		$values[2] =~ tr/ABCDGHMNRSTUVWXYabcdghmnrstuvwxy/TVGHCDKNYSAABWXRtvghcdknysaabwxr/;
+		$values[2] = reverse($values[2]);
+	}
 	$Library{$values[2]} = $values[0];
 	$Genes{$values[0]}=$values[1];
 }
@@ -110,7 +115,7 @@ for (my $i=1;$i<=$NumberOfThreads;$i++) {
 my $ProcessManager=new Parallel::ForkManager($NumberOfThreads);
 for ($Thread=1;$Thread<=$NumberOfThreads;$Thread++) {
 	$ProcessManager->start and next;
-	ProcessReads($InputFile . "." . $Thread,$BarcodeLength,$BarcodeOffset,$ExpectedInsertLength,$ExpectedLeadingSequence,$ExpectedTrailingSequence,$ErrorThresholdLeading,$ErrorThresholdTrailing,\%Library,@Barcodes);
+	ProcessReads($InputFile . "." . $Thread,$BarcodeLength,$BarcodeOffset,$ExpectedInsertLength,$ExpectedLeadingSequence,$ExpectedTrailingSequence,$ErrorThresholdLeading,$ErrorThresholdTrailing,$RunRC,\%Library,@Barcodes);
 	$ProcessManager->finish;
 }
 $ProcessManager->wait_all_children;
