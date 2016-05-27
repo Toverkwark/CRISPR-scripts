@@ -79,7 +79,7 @@ while ( defined( my $Line = <LIBRARY> ) ) {
 	my @values = split( /\,/, $Line );
 
 	#Include this line because excel generated csv files have CRLF line endings
-	#$values[2]=substr($values[2],0,length($values[2])-1);
+	$values[2]=substr($values[2],0,length($values[2])-1);
 	if($RunRC eq 'Y') {
 		$values[2] =~ tr/ABCDGHMNRSTUVWXYabcdghmnrstuvwxy/TVGHCDKNYSAABWXRtvghcdknysaabwxr/;
 		$values[2] = reverse($values[2]);

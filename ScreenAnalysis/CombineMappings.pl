@@ -67,6 +67,10 @@ print "$RightInsertsFound inserts found in library file $RightLibraryFile\n";
 my $TotalInsertCounts=0;
 my $LeftInsertCounts=0;
 while(defined(my $LeftLine=<LEFT>)) {
+	if ( !( $LeftInsertCounts % 100000 ) ) {
+                print "Analyzing record $LeftInsertCounts\n";
+        }
+
 	my $RightLine=<RIGHT>;
 	chomp($LeftLine);
 	chomp($RightLine);
