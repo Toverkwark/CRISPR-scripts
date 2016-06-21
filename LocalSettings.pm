@@ -16,7 +16,7 @@ my $ExpectedTrailingNucleotides=0; #Set at 0 to include all
 my $BowtieLocation;
 my $HumanGenomeLocation;
 my $IndexedHumanGenomeLocation;
-my $NumberOfCoresToUse = 64;
+my $NumberOfCoresToUse = 32;
 my $BarcodeOffset=0;
 my $BarcodeLength=6;
 my $ExpectedInsertLength=20;
